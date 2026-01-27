@@ -290,10 +290,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const dateWrapper = dateDisplay.closest('.input-wrapper');
         const openPicker = () => {
             if (typeof dateInputHidden.showPicker === 'function') {
-                dateInputHidden.showPicker();
-            } else {
-                dateDisplay.focus();
+                try {
+                    dateInputHidden.showPicker();
+                    return;
+                } catch (e) {
+                    // fall through to mobile-friendly fallback
+                }
             }
+            const prevOpacity = dateInputHidden.style.opacity;
+            const prevPointer = dateInputHidden.style.pointerEvents;
+            dateInputHidden.style.pointerEvents = 'auto';
+            dateInputHidden.style.opacity = '0.01';
+            dateInputHidden.focus();
+            dateInputHidden.click();
+            setTimeout(() => {
+                dateInputHidden.style.pointerEvents = prevPointer || 'none';
+                dateInputHidden.style.opacity = prevOpacity || '0';
+            }, 500);
         };
 
         if (dateWrapper) {
@@ -303,6 +316,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+
+        const formatDateDisplay = (val) => {
+            const digits = val.replace(/\D/g, '').slice(0, 8);
+            if (digits.length <= 2) return digits;
+            if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+            return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+        };
+
+        dateDisplay.addEventListener('input', () => {
+            const formatted = formatDateDisplay(dateDisplay.value);
+            dateDisplay.value = formatted;
+        });
 
         dateInputHidden.addEventListener('change', () => {
             if (!dateInputHidden.value) {
@@ -317,12 +342,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const syncFromDisplay = () => {
-            const value = dateDisplay.value.trim();
+            const value = dateDisplay.value.trim().replace(/-/g, '/');
             if (!value) {
                 dateInputHidden.value = '';
                 return;
             }
-            const match = value.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+            const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
             if (!match) return;
             let [, d, m, y] = match;
             if (y.length === 2) y = '20' + y;
