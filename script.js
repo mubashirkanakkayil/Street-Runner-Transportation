@@ -329,6 +329,20 @@ document.addEventListener('DOMContentLoaded', () => {
             dateDisplay.value = formatted;
         });
 
+        const normalizeAndPad = () => {
+            const digits = dateDisplay.value.replace(/\D/g, '');
+            if (digits.length < 6) return; // need at least DDMMYY
+            let d = digits.slice(0, 2);
+            let m = digits.slice(2, 4);
+            let y = digits.slice(4);
+            if (y.length === 2) y = '20' + y;
+            d = d.padStart(2, '0');
+            m = m.padStart(2, '0');
+            y = y.padStart(4, '0');
+            const padded = `${d}/${m}/${y}`;
+            dateDisplay.value = padded;
+        };
+
         dateInputHidden.addEventListener('change', () => {
             if (!dateInputHidden.value) {
                 dateDisplay.value = '';
@@ -361,10 +375,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         dateDisplay.addEventListener('blur', syncFromDisplay);
+        dateDisplay.addEventListener('blur', normalizeAndPad);
         dateDisplay.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 syncFromDisplay();
+                normalizeAndPad();
                 dateDisplay.blur();
             }
         });
