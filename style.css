@@ -463,6 +463,12 @@ p {
     width: 380px;
     box-shadow: var(--shadow-float);
     backdrop-filter: blur(20px);
+    flex-shrink: 0;
+}
+
+/* Anchor target offset for smooth scrolling */
+#get-quote {
+    scroll-margin-top: 90px;
 }
 
 .card-header {
@@ -502,6 +508,11 @@ p {
     transition: all 0.3s;
 }
 
+.input-wrapper i {
+    color: var(--text-muted);
+    min-width: 18px;
+}
+
 .input-wrapper:focus-within {
     border-color: black;
     background: white;
@@ -514,14 +525,81 @@ p {
     outline: none;
     font-family: var(--font-main);
     color: var(--text-dark);
+    font-size: 0.95rem;
 }
 
 .form-row {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
-/* About Section */
+.form-row .form-group {
+    flex: 1;
+    min-width: 0;
+}
+
+.custom-select-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
+.styled-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    padding-right: 30px;
+    position: relative;
+    z-index: 2;
+    background: transparent;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 0.8rem;
+    color: var(--text-dark);
+    z-index: 1;
+    transition: transform 0.3s;
+}
+
+.custom-select-wrapper:focus-within .select-arrow {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.date-wrapper {
+    position: relative;
+}
+
+.date-display {
+    cursor: text;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.date-input-hidden {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.styled-select option {
+    background: #ffffff;
+    color: var(--text-dark);
+}
+
+/* Button spacing inside quote card */
+.quote-card .btn {
+    margin-top: 10px;
+}
+
 .about-section {
     padding: 80px 0;
 }

@@ -221,18 +221,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Smooth Scrolling for Anchors
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
-            e.preventDefault();
             const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
+            if (!targetId || targetId === '#') return;
             const target = document.querySelector(targetId);
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+            if (!target) return;
+
+            e.preventDefault();
+
+            const navbar = document.querySelector('.navbar');
+            const offset = navbar ? navbar.offsetHeight + 10 : 0;
+            const rect = target.getBoundingClientRect();
+            const targetY = rect.top + window.pageYOffset - offset;
+
+            window.scrollTo({
+                top: targetY,
+                behavior: 'smooth'
+            });
+
+            const overlay = document.querySelector('.mobile-menu-overlay');
+            if (overlay && overlay.classList.contains('active')) {
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
             }
         });
     });
@@ -272,6 +283,67 @@ document.addEventListener('DOMContentLoaded', () => {
             navbar.style.boxShadow = 'none';
         }
     });
+
+    const dateInputHidden = document.querySelector('.date-input-hidden');
+    const dateDisplay = document.querySelector('.date-display');
+    if (dateInputHidden && dateDisplay) {
+        const dateWrapper = dateDisplay.closest('.input-wrapper');
+        const openPicker = () => {
+            if (typeof dateInputHidden.showPicker === 'function') {
+                dateInputHidden.showPicker();
+            } else {
+                dateDisplay.focus();
+            }
+        };
+
+        if (dateWrapper) {
+            dateWrapper.addEventListener('click', (e) => {
+                if (e.target !== dateDisplay) {
+                    openPicker();
+                }
+            });
+        }
+
+        dateInputHidden.addEventListener('change', () => {
+            if (!dateInputHidden.value) {
+                dateDisplay.value = '';
+                return;
+            }
+            const parts = dateInputHidden.value.split('-');
+            if (parts.length === 3) {
+                const [year, month, day] = parts;
+                dateDisplay.value = `${day}/${month}/${year}`;
+            }
+        });
+
+        const syncFromDisplay = () => {
+            const value = dateDisplay.value.trim();
+            if (!value) {
+                dateInputHidden.value = '';
+                return;
+            }
+            const match = value.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+            if (!match) return;
+            let [, d, m, y] = match;
+            if (y.length === 2) y = '20' + y;
+            const day = d.padStart(2, '0');
+            const month = m.padStart(2, '0');
+            const iso = `${y}-${month}-${day}`;
+            const testDate = new Date(iso);
+            if (!isNaN(testDate.getTime())) {
+                dateInputHidden.value = iso;
+            }
+        };
+
+        dateDisplay.addEventListener('blur', syncFromDisplay);
+        dateDisplay.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                syncFromDisplay();
+                dateDisplay.blur();
+            }
+        });
+    }
 
     // Filter Buttons Interaction
     const filterBtns = document.querySelectorAll('.filter-btn');

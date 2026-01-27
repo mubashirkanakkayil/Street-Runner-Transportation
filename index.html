@@ -41,7 +41,7 @@
                 <span class="active">EN</span>
                 <div class="toggle-switch"></div>
             </div>
-            <a href="#contact" class="btn btn-black">Get Quote</a>
+            <a href="#get-quote" class="btn btn-black">Get Quote</a>
         </div>
         <div class="hamburger">
             <i class="fa-solid fa-bars"></i>
@@ -61,7 +61,7 @@
             <li><a href="#contact">Contact</a></li>
         </ul>
         <div class="mobile-menu-footer">
-            <a href="#contact" class="btn btn-black btn-block">Get Quote</a>
+            <a href="#get-quote" class="btn btn-black btn-block">Get Quote</a>
         </div>
     </div>
 
@@ -93,7 +93,7 @@
                 </div>
 
                 <!-- Floating Quote Card -->
-                <div class="quote-card">
+                <div class="quote-card" id="get-quote">
                     <div class="card-header">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                         <h3>Get A Quote</h3>
@@ -101,22 +101,24 @@
                     <form class="quote-form">
                         <div class="form-group">
                             <label>Service Type</label>
-                            <div class="input-wrapper">
+                            <div class="input-wrapper custom-select-wrapper">
                                 <i class="fa-solid fa-truck"></i>
-                                <select>
+                                <select class="styled-select">
                                     <option>Road Transportation</option>
                                     <option>Heavy Machinery Rental</option>
                                     <option>Oil & Gas Services</option>
                                     <option>Packing & Shifting</option>
                                 </select>
+                                <i class="fa-solid fa-chevron-down select-arrow"></i>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Date</label>
-                                <div class="input-wrapper">
+                                <div class="input-wrapper date-wrapper">
                                     <i class="fa-regular fa-calendar"></i>
-                                    <input type="text" placeholder="Select Date">
+                                    <input type="text" placeholder="DD/MM/YYYY" class="date-display">
+                                    <input type="date" class="date-input-hidden">
                                 </div>
                             </div>
                             <div class="form-group">
