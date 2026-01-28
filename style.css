@@ -1286,3 +1286,40 @@ footer {
         white-space: nowrap;
     }
 }
+
+/* WhatsApp Float Icon */
+.whatsapp-float {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    background-color: #25d366;
+    color: white;
+    width: 80px; /* Increased size to 80px */
+    height: 80px; /* Increased size to 80px */
+    border-radius: 50%;
+    text-align: center;
+    font-size: 48px; /* Increased icon size */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.whatsapp-float:hover {
+    background-color: #128c7e;
+    transform: scale(1.1);
+    color: white;
+}
+
+/* Mobile adjustments for WhatsApp float */
+@media (max-width: 768px) {
+    .whatsapp-float {
+        width: 65px;
+        height: 65px;
+        bottom: 30px;
+        right: 30px;
+        font-size: 36px;
+    }
+}
