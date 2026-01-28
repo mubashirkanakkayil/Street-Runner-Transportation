@@ -127,7 +127,7 @@ p {
 
 @keyframes fadeInPage {
     0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 1; transform: none; }
 }
 
 /* Navbar */
@@ -1294,32 +1294,35 @@ footer {
     right: 40px;
     background-color: #25d366;
     color: white;
-    width: 80px; /* Increased size to 80px */
-    height: 80px; /* Increased size to 80px */
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     text-align: center;
-    font-size: 48px; /* Increased icon size */
+    font-size: 48px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    z-index: 1000;
+    z-index: 9999; /* Max z-index to ensure visibility */
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+    -webkit-transform: translateZ(0); /* Force hardware acceleration */
+    transform: translateZ(0);
 }
 
 .whatsapp-float:hover {
     background-color: #128c7e;
-    transform: scale(1.1);
+    transform: scale(1.1) translateZ(0);
     color: white;
 }
 
 /* Mobile adjustments for WhatsApp float */
 @media (max-width: 768px) {
     .whatsapp-float {
-        width: 65px;
-        height: 65px;
-        bottom: 30px;
-        right: 30px;
-        font-size: 36px;
+        width: 60px;
+        height: 60px;
+        bottom: 40px; /* Increased bottom spacing for better visibility */
+        right: 25px;
+        font-size: 34px;
+        margin-bottom: env(safe-area-inset-bottom);
     }
 }
