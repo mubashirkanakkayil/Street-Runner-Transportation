@@ -2,31 +2,7 @@
 window.addEventListener('load', () => {
     // This runs when EVERYTHING (images, scripts) is loaded
     // We can use this as a fallback if skeleton loading is too fast
-    // Mobile Menu Toggle
-    const hamburger = document.querySelector('.hamburger');
-    const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
-    const closeMenu = document.querySelector('.close-menu');
-    const mobileNavLinks = document.querySelectorAll('.mobile-nav-links a');
-
-    if (hamburger && mobileMenuOverlay && closeMenu) {
-        hamburger.addEventListener('click', () => {
-            mobileMenuOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
-        });
-
-        closeMenu.addEventListener('click', () => {
-            mobileMenuOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-        });
-
-        // Close menu when a link is clicked
-        mobileNavLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenuOverlay.classList.remove('active');
-                document.body.style.overflow = '';
-            });
-        });
-    }
+    // Mobile Menu logic moved to DOMContentLoaded for faster interaction
 
     // Journey Slider Logic
     const sliderContainer = document.querySelector('.slider-container');
@@ -188,21 +164,41 @@ window.addEventListener('load', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    const preloader = document.querySelector('.preloader');
-    
-    // 1. Handle Preloader
-    if (preloader) {
-        // Show preloader for at least 1.5 seconds for branding, then fade out
-        // This allows the user to see the logo before seeing the skeletons
-        setTimeout(() => {
-            preloader.classList.add('hidden');
-            setTimeout(() => {
-                preloader.style.display = 'none';
-            }, 500);
-        }, 1500);
+    // Mobile Menu Logic
+    const hamburger = document.querySelector('.hamburger');
+    const mobileMenu = document.querySelector('.mobile-menu-overlay');
+    const closeMenu = document.querySelector('.close-menu');
+    const mobileLinks = document.querySelectorAll('.mobile-nav-links a, .mobile-menu-footer a');
+
+    if (hamburger && mobileMenu && closeMenu) {
+        // Open Menu
+        hamburger.addEventListener('click', () => {
+            mobileMenu.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        });
+
+        // Close Menu
+        const closeMobileMenu = () => {
+            mobileMenu.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        closeMenu.addEventListener('click', closeMobileMenu);
+
+        // Close when clicking links
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', closeMobileMenu);
+        });
+
+        // Close when clicking outside (optional, but good UX)
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target === mobileMenu) {
+                closeMobileMenu();
+            }
+        });
     }
 
-    // 2. Handle Skeleton Loading for Images
+    // 1. Handle Skeleton Loading for Images
     const skeletonImages = document.querySelectorAll('.skeleton-image img');
     
     skeletonImages.forEach(img => {

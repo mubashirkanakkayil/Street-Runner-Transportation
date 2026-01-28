@@ -124,123 +124,10 @@ p {
     width: 100%;
 }
 
-/* Preloader */
-.preloader {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #000;
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: opacity 0.5s ease, visibility 0.5s;
-}
 
-.preloader.hidden {
-    opacity: 0;
-    visibility: hidden;
-}
-
-.loader-scene {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: fit-content;
-    margin: 0 auto;
-}
-
-.loader-text {
-    color: white;
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
-    font-weight: 900;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    position: relative;
-    text-align: center;
-    white-space: nowrap;
-}
-
-/* Container for the moving truck */
-.truck-container {
-    position: absolute;
-    bottom: 100%;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    overflow: visible;
-    margin-bottom: 10px;
-}
-
-.truck-wrapper {
-    position: absolute;
-    bottom: 0;
-    animation: driveAcross 3s linear infinite, truckBounce 0.4s infinite alternate ease-in-out;
-}
-
-.truck-icon {
-    font-size: 2.2rem; /* Reduced from 3rem */
-    color: white;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
-    /* transform: scaleX(-1); REMOVED: Font Awesome truck usually faces left by default, but if it's "truck-moving" it faces right. 
-       If it looks backward, scaleX(1) or removing scaleX(-1) should fix it depending on the icon set direction.
-       Let's assume default is correct direction or we need to flip it the OTHER way. 
-       Wait, "truck-moving" in FA 6 usually faces RIGHT. 
-       If user says it's moving backward, and I had scaleX(-1), I probably flipped it to face LEFT.
-       So removing scaleX(-1) or setting scaleX(1) will make it face RIGHT. */
-    transform: scaleX(1); 
-}
-
-.exhaust-fumes {
-    position: absolute;
-    left: -15px;
-    bottom: 5px;
-}
-
-.exhaust-fumes span {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    background: rgba(255,255,255,0.6);
-    border-radius: 50%;
-    opacity: 0;
-    animation: fumes 1s infinite;
-}
-
-.exhaust-fumes span:nth-child(2) {
-    animation-delay: 0.3s;
-}
-
-.exhaust-fumes span:nth-child(3) {
-    animation-delay: 0.6s;
-}
-
-@keyframes driveAcross {
-    0% { left: -20%; }
-    100% { left: 120%; }
-}
-
-@keyframes truckBounce {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-3px); }
-}
-
-@keyframes fumes {
-    0% {
-        transform: translate(0, 0) scale(1);
-        opacity: 0;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-20px, 5px) scale(2);
-        opacity: 0;
-    }
+@keyframes fadeInPage {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 
 /* Navbar */
@@ -323,59 +210,73 @@ p {
     display: none;
     font-size: 1.5rem;
     cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Subheader Search */
+.hamburger:hover {
+    transform: scale(1.2);
+}
+
+/* Subheader Search / Filter Buttons (Outside Hero) */
 .subheader-container {
-    padding: 0 40px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.search-bar {
-    background: #f1f1f1;
-    padding: 12px 20px;
-    border-radius: 50px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 400px;
-}
-
-.search-bar input {
-    border: none;
-    background: transparent;
-    outline: none;
+    position: relative;
+    top: 0;
+    left: 0;
     width: 100%;
-    font-family: var(--font-main);
+    z-index: 10;
+    padding: 20px 0 20px 40px; /* Aligned with hero-section padding context */
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.subheader-container::-webkit-scrollbar {
+    display: none;
 }
 
 .quick-filters {
     display: flex;
-    gap: 10px;
+    gap: 12px;
+    width: max-content;
+    padding-right: 60px;
 }
 
 .filter-btn {
     background: transparent;
-    border: 1px solid #eee;
-    padding: 8px 16px;
-    border-radius: 30px;
+    border: 1px solid #e0e0e0;
+    padding: 10px 24px;
+    border-radius: 50px;
     cursor: pointer;
     font-family: var(--font-main);
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-dark);
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.filter-btn i {
+    font-size: 1rem;
+    color: var(--text-muted);
+    transition: all 0.3s ease;
 }
 
 .filter-btn:hover, .filter-btn.active {
     background: black;
     color: white;
     border-color: black;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.filter-btn:hover i, .filter-btn.active i {
+    color: white;
 }
 
 /* Hero Section */
@@ -428,7 +329,7 @@ p {
     font-size: 3.5rem;
     margin-bottom: 20px;
     opacity: 0;
-    animation: revealText 1s cubic-bezier(0.2, 1, 0.3, 1) forwards 1.2s; /* Delayed start after preloader */
+    animation: revealText 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards 0.2s;
 }
 
 .hero-text p {
@@ -436,12 +337,12 @@ p {
     font-size: 1.1rem;
     margin-bottom: 30px;
     opacity: 0;
-    animation: revealText 1s cubic-bezier(0.2, 1, 0.3, 1) forwards 1.4s;
+    animation: revealText 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards 0.4s;
 }
 
 .hero-text .btn {
     opacity: 0;
-    animation: revealText 1s cubic-bezier(0.2, 1, 0.3, 1) forwards 1.6s;
+    animation: revealText 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards 0.6s;
 }
 
 @keyframes revealText {
@@ -464,6 +365,8 @@ p {
     box-shadow: var(--shadow-float);
     backdrop-filter: blur(20px);
     flex-shrink: 0;
+    opacity: 0;
+    animation: revealText 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards 0.5s;
 }
 
 /* Anchor target offset for smooth scrolling */
@@ -1256,7 +1159,7 @@ footer {
 
 /* Responsive */
 @media (max-width: 1024px) {
-    .about-grid, .mission-grid {
+    .about-grid {
         grid-template-columns: 1fr;
     }
     
@@ -1289,9 +1192,23 @@ footer {
     .slider-container {
         padding: 0;
     }
+    
+    /* Show slider buttons on mobile/tablet but make them smaller */
     .slider-btn {
-        display: none;
+        display: flex;
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(5px);
     }
+    .slider-btn:hover {
+        background: black;
+        color: white;
+    }
+    /* Adjust position to not cover too much content */
+    .prev-btn { left: 10px; }
+    .next-btn { right: 10px; }
 }
 
 @media (max-width: 768px) {
@@ -1351,17 +1268,18 @@ footer {
     }
 
     .subheader-container {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .search-bar {
-        width: 100%;
+        flex-direction: row; /* Horizontal scroll */
+        justify-content: flex-start;
+        align-items: center;
+        padding: 20px 20px 20px; /* Added top padding to prevent hover clipping */
+        top: 0;
     }
 
     .quick-filters {
-        overflow-x: auto;
-        padding-bottom: 10px;
+        width: max-content;
+        padding-right: 20px;
+        justify-content: flex-start;
+        padding-bottom: 0;
     }
 
     .filter-btn {
