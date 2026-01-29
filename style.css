@@ -25,7 +25,13 @@ body {
     color: var(--text-dark);
     line-height: 1.6;
     overflow-x: hidden;
+    width: 100%;
     animation: fadeInPage 0.8s ease-out;
+}
+
+html {
+    overflow-x: hidden;
+    width: 100%;
 }
 
 a {
@@ -992,7 +998,7 @@ footer {
 .mobile-nav-links a {
     font-size: 1.8rem;
     font-weight: 700;
-    color: var(--text-dark);
+    color: var(--text-muted);
     text-decoration: none;
     display: block;
     transform: translateX(-20px);
@@ -1012,7 +1018,7 @@ footer {
 .mobile-menu-overlay.active .mobile-nav-links li:nth-child(4) a { transition-delay: 0.4s; }
 
 .mobile-nav-links a:hover {
-    color: #666;
+    color: var(--text-dark);
     transform: translateX(10px) !important;
 }
 
@@ -1212,8 +1218,22 @@ footer {
 }
 
 @media (max-width: 768px) {
+    /* General Mobile Layout */
+    .container {
+        padding: 0 20px;
+    }
+    
+    /* Reduce animation distance to prevent horizontal scroll */
+    .reveal-slide-left { transform: translateX(-20px); }
+    .reveal-slide-right { transform: translateX(20px); }
+    
+    .section {
+        padding: 40px 0;
+    }
+
+    /* Navbar & Hamburger */
     .navbar {
-        padding: 20px;
+        padding: 15px 20px;
     }
 
     .nav-links, .nav-right {
@@ -1223,19 +1243,58 @@ footer {
     .hamburger {
         display: block;
     }
+    
+    /* Mobile Menu Optimization */
+    .mobile-nav-links a {
+        font-size: 1.2rem;
+        line-height: 1.4;
+    }
+    
+    .mobile-nav-links {
+        gap: 15px; /* Comfortable spacing */
+    }
 
+    .close-menu {
+        position: absolute;
+        width: 35px;
+        height: 35px;
+        font-size: 1.4rem;
+        top: 20px;
+        right: 35px; /* Moved left */
+    }
+
+    /* Typography */
+    h1 {
+        font-size: 2rem;
+    }
+    
+    h2 {
+        font-size: 1.75rem;
+    }
+    
+    p {
+        font-size: 0.95rem;
+        text-align: justify; /* Justify text for readability */
+        line-height: 1.6;
+    }
+
+    .about-text-large h2 {
+        font-size: 2rem;
+    }
+
+    /* Hero Section */
     .hero-content {
         flex-direction: column;
         justify-content: center;
-        gap: 30px;
-        padding: 100px 20px 40px; /* More top padding for navbar */
+        gap: 20px;
+        padding: 100px 20px 40px;
         text-align: center;
-        position: relative; /* Changed from absolute to flow content */
+        position: relative;
         height: auto;
     }
 
     .hero-bg-wrapper {
-        height: auto; /* Let content dictate height */
+        height: auto;
         min-height: auto;
     }
 
@@ -1249,11 +1308,23 @@ footer {
     .hero-text {
         margin: 0;
     }
+    
+    .hero-text h1 {
+        font-size: 2rem;
+        line-height: 1.2;
+        margin-bottom: 15px;
+    }
+    
+    .hero-text p {
+        font-size: 1rem;
+        text-align: center; /* Keep hero centered */
+    }
 
+    /* Quote Card */
     .quote-card {
         width: 100%;
-        max-width: 400px; /* Limit width on larger mobiles */
-        margin: 0 auto; /* Center it */
+        max-width: 100%;
+        margin: 0 auto;
         padding: 25px;
     }
 
@@ -1262,28 +1333,93 @@ footer {
         gap: 0;
     }
 
-    .hero-text h1 {
-        font-size: 2.2rem;
-        line-height: 1.2;
-    }
-
+    /* Subheader/Filters */
     .subheader-container {
-        flex-direction: row; /* Horizontal scroll */
+        flex-direction: row;
         justify-content: flex-start;
         align-items: center;
-        padding: 20px 20px 20px; /* Added top padding to prevent hover clipping */
-        top: 0;
+        padding: 15px 20px;
     }
 
     .quick-filters {
         width: max-content;
         padding-right: 20px;
-        justify-content: flex-start;
         padding-bottom: 0;
+        justify-content: flex-start;
     }
-
+    
     .filter-btn {
         white-space: nowrap;
+    }
+
+    /* Cards - Mission & Vision (Preserve Horizontal) */
+    .mission-grid {
+        grid-template-columns: 1fr 1fr; /* Force 2 columns */
+        gap: 15px;
+    }
+
+    .mv-card {
+        padding: 20px;
+    }
+
+    .mv-icon {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+
+    .mv-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    .mv-card p {
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    /* Cards - Services (Preserve Horizontal for Grid Items) */
+    .services-masonry {
+        grid-template-columns: repeat(2, 1fr); /* Force 2 columns */
+        grid-auto-rows: auto; /* Allow rows to adapt to content height */
+        gap: 10px;
+    }
+
+    .service-item.large {
+        grid-column: span 2; /* Full width for large item */
+        height: 260px;
+    }
+
+    .service-item {
+        height: 160px; /* Reduced height to fit 2 cols */
+    }
+
+    .service-info {
+        padding: 15px;
+    }
+
+    .service-info h3 {
+        font-size: 0.95rem;
+        margin-bottom: 5px;
+    }
+
+    .service-info p {
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+
+    .arrow-btn {
+        width: 30px;
+        height: 30px;
+        bottom: 10px;
+        right: 10px;
+        font-size: 0.8rem;
+    }
+    
+    /* Journey Slider Adjustments */
+    .journey-card {
+        min-width: 260px;
+        width: 75vw;
+        height: 320px;
     }
 }
 
@@ -1313,6 +1449,13 @@ footer {
     background-color: #128c7e;
     transform: scale(1.1) translateZ(0);
     color: white;
+}
+
+/* Hide WhatsApp icon when mobile menu is open */
+body.menu-open .whatsapp-float {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 /* Mobile adjustments for WhatsApp float */

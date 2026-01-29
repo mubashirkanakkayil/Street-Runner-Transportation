@@ -174,12 +174,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Open Menu
         hamburger.addEventListener('click', () => {
             mobileMenu.classList.add('active');
+            document.body.classList.add('menu-open');
             document.body.style.overflow = 'hidden'; // Prevent scrolling
         });
 
         // Close Menu
         const closeMobileMenu = () => {
             mobileMenu.classList.remove('active');
+            document.body.classList.remove('menu-open');
             document.body.style.overflow = '';
         };
 
