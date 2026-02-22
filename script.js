@@ -536,15 +536,21 @@ window.addEventListener('load', () => {
         const allSlides = document.querySelectorAll('#testimonials .testimonial-card');
         let currentIndex = cloneCount;
         let isTransitioning = false;
+        const supportPointer = 'PointerEvent' in window;
         tSlides.forEach((_, index) => {
             const dot = document.createElement('div');
             dot.classList.add('dot');
             if (index === 0) dot.classList.add('active');
-            dot.addEventListener('click', () => {
+            const activateDot = () => {
                 if (isTransitioning) return;
                 currentIndex = index + cloneCount;
                 updateSlider(true);
-            });
+            };
+            if (supportPointer) {
+                dot.addEventListener('pointerup', activateDot, { passive: true });
+            } else {
+                dot.addEventListener('click', activateDot);
+            }
             if (tDotsContainer) tDotsContainer.appendChild(dot);
         });
         const updateDots = () => {
@@ -586,7 +592,7 @@ window.addEventListener('load', () => {
         const updateSlider = (smooth = true) => {
             const totalItemWidth = getSlideWidth();
             if (smooth) {
-                tTrack.style.transition = 'transform 0.45s cubic-bezier(0.19, 1, 0.22, 1)';
+                tTrack.style.transition = 'transform 0.45s ease-in-out';
                 isTransitioning = true;
             } else {
                 tTrack.style.transition = 'none';
@@ -661,9 +667,11 @@ window.addEventListener('load', () => {
         const onEnd = () => {
             if (!dragging) return;
             dragging = false;
-            if (dragDelta > 50) {
+            const totalItemWidth = getSlideWidth();
+            const threshold = Math.min(80, Math.max(50, totalItemWidth * 0.15));
+            if (dragDelta > threshold) {
                 prevSlide();
-            } else if (dragDelta < -50) {
+            } else if (dragDelta < -threshold) {
                 nextSlide();
             } else {
                 updateSlider(true);
