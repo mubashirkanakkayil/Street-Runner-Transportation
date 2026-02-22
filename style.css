@@ -1800,9 +1800,6 @@ body.menu-open .whatsapp-float {
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
-    .testimonials-section .slider-btn {
-        display: flex;
-    }
     .testimonials-track {
         gap: 24px;
     }
