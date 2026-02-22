@@ -1197,6 +1197,8 @@ footer {
 .testimonials-section .slider-container {
     padding: 0 48px;
     margin-top: 24px;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
 }
 
 .contact-header {
@@ -1209,6 +1211,8 @@ footer {
     width: 100%;
     margin-top: 40px;
     padding: 0 50px;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
 }
 
 .slider-wrapper {
@@ -1220,7 +1224,8 @@ footer {
 .slider-track {
     display: flex;
     gap: 30px;
-    transition: transform 0.5s ease-out;
+    transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    will-change: transform;
     width: max-content;
 }
 

@@ -36,17 +36,24 @@ window.addEventListener('load', () => {
         let isTransitioning = false;
         let autoPlayInterval;
 
-        // Create Dots
+        // Create Dots (pointer-friendly)
+        const supportPointer = 'PointerEvent' in window;
         originalSlides.forEach((_, index) => {
             const dot = document.createElement('div');
             dot.classList.add('dot');
             if (index === 0) dot.classList.add('active');
-            dot.addEventListener('click', () => {
+            const activateDot = (e) => {
+                if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
                 if (isTransitioning) return;
                 currentIndex = index + cloneCount;
                 updateSlider(true);
                 resetAutoPlay();
-            });
+            };
+            if (supportPointer) {
+                dot.addEventListener('pointerup', activateDot, { passive: true });
+            } else {
+                dot.addEventListener('click', activateDot);
+            }
             dotsContainer.appendChild(dot);
         });
 
@@ -67,11 +74,14 @@ window.addEventListener('load', () => {
             return allSlides[0].offsetWidth + gap;
         };
 
+        let unlockTimer;
         const updateSlider = (smooth = true) => {
             const totalItemWidth = getSlideWidth();
             if (smooth) {
-                sliderTrack.style.transition = 'transform 0.5s ease-out';
+                sliderTrack.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
                 isTransitioning = true;
+                if (unlockTimer) clearTimeout(unlockTimer);
+                unlockTimer = setTimeout(() => { isTransitioning = false; }, 550);
             } else {
                 sliderTrack.style.transition = 'none';
                 isTransitioning = false;
@@ -164,44 +174,58 @@ window.addEventListener('load', () => {
             sliderTrack.style.transition = 'none';
             stopAutoPlay();
         };
+        let rafPending = false;
+        let lastX = 0;
+        let dragStep = 0;
         const onMove = (x) => {
             if (!dragging) return;
-            const totalItemWidth = getSlideWidth();
-            let offset = 0;
-            if (window.innerWidth <= 1024) {
-                const cardWidth = allSlides[0].offsetWidth;
-                const wrapperWidth = sliderTrack.parentElement.offsetWidth;
-                offset = (wrapperWidth - cardWidth) / 2 - 10;
-            }
-            dragDelta = x - startX;
-            sliderTrack.style.transform = `translateX(${-(currentIndex * totalItemWidth) + offset + dragDelta}px)`;
+            lastX = x;
+            if (rafPending) return;
+            rafPending = true;
+            requestAnimationFrame(() => {
+                const totalItemWidth = dragStep || getSlideWidth();
+                let offset = 0;
+                if (window.innerWidth <= 1024) {
+                    const cardWidth = allSlides[0].offsetWidth;
+                    const wrapperWidth = sliderTrack.parentElement.offsetWidth;
+                    offset = (wrapperWidth - cardWidth) / 2 - 10;
+                }
+                dragDelta = lastX - startX;
+                sliderTrack.style.transform = `translateX(${-(currentIndex * totalItemWidth) + offset + dragDelta}px)`;
+                rafPending = false;
+            });
         };
         const onEnd = () => {
             if (!dragging) return;
             dragging = false;
-            if (dragDelta > 50) {
+            const totalItemWidth = dragStep || getSlideWidth();
+            const threshold = Math.max(50, totalItemWidth * 0.15);
+            if (dragDelta > threshold) {
                 prevSlide();
-            } else if (dragDelta < -50) {
+            } else if (dragDelta < -threshold) {
                 nextSlide();
             } else {
                 updateSlider(true);
             }
             dragDelta = 0;
+            dragStep = 0;
             startAutoPlay();
         };
         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
         const allowSwipe = isTouchDevice && window.innerWidth <= 1024;
         if (allowSwipe && sliderContainer) {
-            sliderContainer.addEventListener('touchstart', (e) => onStart(e.touches[0].clientX), { passive: true });
+            sliderContainer.addEventListener('touchstart', (e) => { onStart(e.touches[0].clientX); dragStep = getSlideWidth(); }, { passive: true });
             sliderContainer.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX), { passive: true });
-            sliderContainer.addEventListener('touchend', onEnd);
+            sliderContainer.addEventListener('touchend', onEnd, { passive: true });
+            sliderContainer.addEventListener('touchcancel', onEnd, { passive: true });
             sliderContainer.addEventListener('mouseleave', () => { if (dragging) onEnd(); });
         }
 
+        let resizeTimeout = null;
         window.addEventListener('resize', () => {
-            // Recalculate position without animation
-            updateSlider(false);
-        });
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => updateSlider(false), 120);
+        }, { passive: true });
 
         startAutoPlay();
     }
@@ -699,7 +723,8 @@ window.addEventListener('load', () => {
                 dragStep = getSlideWidth();
             }, { passive: true });
             tContainer.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX), { passive: true });
-            tContainer.addEventListener('touchend', onEnd);
+            tContainer.addEventListener('touchend', onEnd, { passive: true });
+            tContainer.addEventListener('touchcancel', onEnd, { passive: true });
             // Prevent accidental drag with mouse on touch devices
             tContainer.addEventListener('mouseleave', () => { if (dragging) onEnd(); });
         }
