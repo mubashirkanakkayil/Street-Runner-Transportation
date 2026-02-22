@@ -1186,7 +1186,8 @@ footer {
 }
 
 .testimonials-section .slider-track {
-    transition: transform 0.45s ease-in-out;
+    transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    will-change: transform;
 }
 
 .testimonials-section .section-header h2 {

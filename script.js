@@ -592,7 +592,7 @@ window.addEventListener('load', () => {
         const updateSlider = (smooth = true) => {
             const totalItemWidth = getSlideWidth();
             if (smooth) {
-                tTrack.style.transition = 'transform 0.45s ease-in-out';
+                tTrack.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
                 isTransitioning = true;
             } else {
                 tTrack.style.transition = 'none';
@@ -644,25 +644,32 @@ window.addEventListener('load', () => {
             startX = x;
             tTrack.style.transition = 'none';
         };
+        let rafPending = false;
+        let lastX = 0;
         const onMove = (x) => {
             if (!dragging) return;
-            const totalItemWidth = getSlideWidth();
-            let offset = 0;
-            // center only when 1 card visible
-            const w = window.innerWidth;
-            const singleVisible = w < 768;
-            if (singleVisible) {
-                const cardWidth = allSlides[0].offsetWidth;
-                const parent = tTrack.parentElement;
-                const parentStyles = window.getComputedStyle(parent);
-                const padL = parseInt(parentStyles.paddingLeft) || 0;
-                const padR = parseInt(parentStyles.paddingRight) || 0;
-                const wrapperWidth = parent.offsetWidth;
-                const contentWidth = wrapperWidth - padL - padR;
-                offset = Math.round((contentWidth - cardWidth) / 2) - padL;
-            }
-            dragDelta = x - startX;
-            tTrack.style.transform = `translateX(${-(currentIndex * totalItemWidth) + offset + dragDelta}px)`;
+            lastX = x;
+            if (rafPending) return;
+            rafPending = true;
+            requestAnimationFrame(() => {
+                const totalItemWidth = getSlideWidth();
+                let offset = 0;
+                const w = window.innerWidth;
+                const singleVisible = w < 768;
+                if (singleVisible) {
+                    const cardWidth = allSlides[0].offsetWidth;
+                    const parent = tTrack.parentElement;
+                    const parentStyles = window.getComputedStyle(parent);
+                    const padL = parseInt(parentStyles.paddingLeft) || 0;
+                    const padR = parseInt(parentStyles.paddingRight) || 0;
+                    const wrapperWidth = parent.offsetWidth;
+                    const contentWidth = wrapperWidth - padL - padR;
+                    offset = Math.round((contentWidth - cardWidth) / 2) - padL;
+                }
+                dragDelta = lastX - startX;
+                tTrack.style.transform = `translateX(${-(currentIndex * totalItemWidth) + offset + dragDelta}px)`;
+                rafPending = false;
+            });
         };
         const onEnd = () => {
             if (!dragging) return;
@@ -687,6 +694,10 @@ window.addEventListener('load', () => {
             // Prevent accidental drag with mouse on touch devices
             tContainer.addEventListener('mouseleave', () => { if (dragging) onEnd(); });
         }
-        window.addEventListener('resize', () => updateSlider(false));
+        let resizeTimeout = null;
+        window.addEventListener('resize', () => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => updateSlider(false), 120);
+        }, { passive: true });
     }
 });
