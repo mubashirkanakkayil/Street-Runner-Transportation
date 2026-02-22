@@ -51,7 +51,7 @@ window.addEventListener('load', () => {
         });
 
         const updateDots = () => {
-            const dots = document.querySelectorAll('.dot');
+            const dots = dotsContainer ? dotsContainer.querySelectorAll('.dot') : [];
             dots.forEach(d => d.classList.remove('active'));
             
             let realIndex = currentIndex - cloneCount;
@@ -152,6 +152,50 @@ window.addEventListener('load', () => {
         if (sliderContainer) {
             sliderContainer.addEventListener('mouseenter', stopAutoPlay);
             sliderContainer.addEventListener('mouseleave', startAutoPlay);
+        }
+
+        // Touch Swipe (Mobile/Tablet)
+        let startX = 0;
+        let dragging = false;
+        let dragDelta = 0;
+        const onStart = (x) => {
+            dragging = true;
+            startX = x;
+            sliderTrack.style.transition = 'none';
+            stopAutoPlay();
+        };
+        const onMove = (x) => {
+            if (!dragging) return;
+            const totalItemWidth = getSlideWidth();
+            let offset = 0;
+            if (window.innerWidth <= 1024) {
+                const cardWidth = allSlides[0].offsetWidth;
+                const wrapperWidth = sliderTrack.parentElement.offsetWidth;
+                offset = (wrapperWidth - cardWidth) / 2 - 10;
+            }
+            dragDelta = x - startX;
+            sliderTrack.style.transform = `translateX(${-(currentIndex * totalItemWidth) + offset + dragDelta}px)`;
+        };
+        const onEnd = () => {
+            if (!dragging) return;
+            dragging = false;
+            if (dragDelta > 50) {
+                prevSlide();
+            } else if (dragDelta < -50) {
+                nextSlide();
+            } else {
+                updateSlider(true);
+            }
+            dragDelta = 0;
+            startAutoPlay();
+        };
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
+        const allowSwipe = isTouchDevice && window.innerWidth <= 1024;
+        if (allowSwipe && sliderContainer) {
+            sliderContainer.addEventListener('touchstart', (e) => onStart(e.touches[0].clientX), { passive: true });
+            sliderContainer.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX), { passive: true });
+            sliderContainer.addEventListener('touchend', onEnd);
+            sliderContainer.addEventListener('mouseleave', () => { if (dragging) onEnd(); });
         }
 
         window.addEventListener('resize', () => {
@@ -466,5 +510,175 @@ document.addEventListener('DOMContentLoaded', () => {
                 ticking = true;
             }
         });
+    }
+});
+
+window.addEventListener('load', () => {
+    const tContainer = document.querySelector('#testimonials .slider-container');
+    const tTrack = document.querySelector('#testimonials .slider-track');
+    const tSlides = document.querySelectorAll('#testimonials .testimonial-card');
+    const tPrev = document.querySelector('#testimonials .prev-btn');
+    const tNext = document.querySelector('#testimonials .next-btn');
+    const tDotsContainer = document.querySelector('#testimonials .slider-dots');
+    if (tTrack && tSlides.length > 0) {
+        const slidesCount = tSlides.length;
+        const cloneCount = 2;
+        for (let i = slidesCount - cloneCount; i < slidesCount; i++) {
+            const clone = tSlides[i].cloneNode(true);
+            clone.classList.add('clone');
+            tTrack.insertBefore(clone, tTrack.firstChild);
+        }
+        for (let i = 0; i < cloneCount; i++) {
+            const clone = tSlides[i].cloneNode(true);
+            clone.classList.add('clone');
+            tTrack.appendChild(clone);
+        }
+        const allSlides = document.querySelectorAll('#testimonials .testimonial-card');
+        let currentIndex = cloneCount;
+        let isTransitioning = false;
+        tSlides.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.classList.add('dot');
+            if (index === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => {
+                if (isTransitioning) return;
+                currentIndex = index + cloneCount;
+                updateSlider(true);
+            });
+            if (tDotsContainer) tDotsContainer.appendChild(dot);
+        });
+        const updateDots = () => {
+            const dots = tDotsContainer ? tDotsContainer.querySelectorAll('.dot') : [];
+            dots.forEach(d => d.classList.remove('active'));
+            let realIndex = currentIndex - cloneCount;
+            if (realIndex < 0) realIndex = slidesCount - 1;
+            if (realIndex >= slidesCount) realIndex = 0;
+            if (dots[realIndex]) dots[realIndex].classList.add('active');
+        };
+        const getSlideWidth = () => {
+            const trackStyles = window.getComputedStyle(tTrack);
+            const gap = parseInt(trackStyles.gap) || 30;
+            let visibleCount = 3;
+            const w = window.innerWidth;
+            if (w < 1024 && w >= 768) {
+                visibleCount = 2;
+            } else if (w < 768) {
+                visibleCount = 1;
+            }
+            const parent = tTrack.parentElement;
+            const parentStyles = window.getComputedStyle(parent);
+            const padL = parseInt(parentStyles.paddingLeft) || 0;
+            const padR = parseInt(parentStyles.paddingRight) || 0;
+            const wrapperWidth = parent.offsetWidth;
+            const contentWidth = wrapperWidth - padL - padR;
+            let cardWidth;
+            if (visibleCount === 1) {
+                const hoverScale = 1.02;
+                cardWidth = Math.floor(contentWidth / hoverScale);
+            } else {
+                cardWidth = (contentWidth - gap * (visibleCount - 1)) / visibleCount;
+            }
+            allSlides.forEach(slide => {
+                slide.style.flexBasis = `${cardWidth}px`;
+            });
+            return cardWidth + gap;
+        };
+        const updateSlider = (smooth = true) => {
+            const totalItemWidth = getSlideWidth();
+            if (smooth) {
+                tTrack.style.transition = 'transform 0.45s cubic-bezier(0.19, 1, 0.22, 1)';
+                isTransitioning = true;
+            } else {
+                tTrack.style.transition = 'none';
+                isTransitioning = false;
+            }
+            let offset = 0;
+            const singleVisible = window.innerWidth < 768;
+            if (singleVisible) {
+                const cardWidth = allSlides[0].offsetWidth;
+                const parent = tTrack.parentElement;
+                const parentStyles = window.getComputedStyle(parent);
+                const padL = parseInt(parentStyles.paddingLeft) || 0;
+                const padR = parseInt(parentStyles.paddingRight) || 0;
+                const wrapperWidth = parent.offsetWidth;
+                const contentWidth = wrapperWidth - padL - padR;
+                offset = Math.round((contentWidth - cardWidth) / 2) - padL;
+            }
+            tTrack.style.transform = `translateX(${-(currentIndex * totalItemWidth) + offset}px)`;
+            updateDots();
+        };
+        updateSlider(false);
+        const nextSlide = () => {
+            if (isTransitioning) return;
+            currentIndex++;
+            updateSlider(true);
+        };
+        const prevSlide = () => {
+            if (isTransitioning) return;
+            currentIndex--;
+            updateSlider(true);
+        };
+        tTrack.addEventListener('transitionend', () => {
+            isTransitioning = false;
+            if (currentIndex >= slidesCount + cloneCount) {
+                currentIndex = cloneCount;
+                updateSlider(false);
+            } else if (currentIndex < cloneCount) {
+                currentIndex = slidesCount + cloneCount - 1;
+                updateSlider(false);
+            }
+        });
+        if (tNext) tNext.addEventListener('click', nextSlide);
+        if (tPrev) tPrev.addEventListener('click', prevSlide);
+        let startX = 0;
+        let dragging = false;
+        let dragDelta = 0;
+        const onStart = (x) => {
+            dragging = true;
+            startX = x;
+            tTrack.style.transition = 'none';
+        };
+        const onMove = (x) => {
+            if (!dragging) return;
+            const totalItemWidth = getSlideWidth();
+            let offset = 0;
+            // center only when 1 card visible
+            const w = window.innerWidth;
+            const singleVisible = w < 768;
+            if (singleVisible) {
+                const cardWidth = allSlides[0].offsetWidth;
+                const parent = tTrack.parentElement;
+                const parentStyles = window.getComputedStyle(parent);
+                const padL = parseInt(parentStyles.paddingLeft) || 0;
+                const padR = parseInt(parentStyles.paddingRight) || 0;
+                const wrapperWidth = parent.offsetWidth;
+                const contentWidth = wrapperWidth - padL - padR;
+                offset = Math.round((contentWidth - cardWidth) / 2) - padL;
+            }
+            dragDelta = x - startX;
+            tTrack.style.transform = `translateX(${-(currentIndex * totalItemWidth) + offset + dragDelta}px)`;
+        };
+        const onEnd = () => {
+            if (!dragging) return;
+            dragging = false;
+            if (dragDelta > 50) {
+                prevSlide();
+            } else if (dragDelta < -50) {
+                nextSlide();
+            } else {
+                updateSlider(true);
+            }
+            dragDelta = 0;
+        };
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
+        const allowSwipe = isTouchDevice && window.innerWidth < 1024;
+        if (allowSwipe) {
+            tContainer.addEventListener('touchstart', (e) => onStart(e.touches[0].clientX), { passive: true });
+            tContainer.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX), { passive: true });
+            tContainer.addEventListener('touchend', onEnd);
+            // Prevent accidental drag with mouse on touch devices
+            tContainer.addEventListener('mouseleave', () => { if (dragging) onEnd(); });
+        }
+        window.addEventListener('resize', () => updateSlider(false));
     }
 });
