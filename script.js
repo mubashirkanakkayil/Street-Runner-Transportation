@@ -541,7 +541,8 @@ window.addEventListener('load', () => {
             const dot = document.createElement('div');
             dot.classList.add('dot');
             if (index === 0) dot.classList.add('active');
-            const activateDot = () => {
+            const activateDot = (e) => {
+                if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
                 if (isTransitioning) return;
                 currentIndex = index + cloneCount;
                 updateSlider(true);
@@ -589,11 +590,14 @@ window.addEventListener('load', () => {
             });
             return cardWidth + gap;
         };
+        let unlockTimer = null;
         const updateSlider = (smooth = true) => {
             const totalItemWidth = getSlideWidth();
             if (smooth) {
                 tTrack.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
                 isTransitioning = true;
+                if (unlockTimer) clearTimeout(unlockTimer);
+                unlockTimer = setTimeout(() => { isTransitioning = false; }, 550);
             } else {
                 tTrack.style.transition = 'none';
                 isTransitioning = false;
@@ -646,13 +650,14 @@ window.addEventListener('load', () => {
         };
         let rafPending = false;
         let lastX = 0;
+        let dragStep = 0;
         const onMove = (x) => {
             if (!dragging) return;
             lastX = x;
             if (rafPending) return;
             rafPending = true;
             requestAnimationFrame(() => {
-                const totalItemWidth = getSlideWidth();
+                const totalItemWidth = dragStep || getSlideWidth();
                 let offset = 0;
                 const w = window.innerWidth;
                 const singleVisible = w < 768;
@@ -674,8 +679,8 @@ window.addEventListener('load', () => {
         const onEnd = () => {
             if (!dragging) return;
             dragging = false;
-            const totalItemWidth = getSlideWidth();
-            const threshold = Math.min(80, Math.max(50, totalItemWidth * 0.15));
+            const totalItemWidth = dragStep || getSlideWidth();
+            const threshold = Math.max(50, totalItemWidth * 0.15);
             if (dragDelta > threshold) {
                 prevSlide();
             } else if (dragDelta < -threshold) {
@@ -684,11 +689,15 @@ window.addEventListener('load', () => {
                 updateSlider(true);
             }
             dragDelta = 0;
+            dragStep = 0;
         };
         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
         const allowSwipe = isTouchDevice && window.innerWidth < 1024;
         if (allowSwipe) {
-            tContainer.addEventListener('touchstart', (e) => onStart(e.touches[0].clientX), { passive: true });
+            tContainer.addEventListener('touchstart', (e) => {
+                onStart(e.touches[0].clientX);
+                dragStep = getSlideWidth();
+            }, { passive: true });
             tContainer.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX), { passive: true });
             tContainer.addEventListener('touchend', onEnd);
             // Prevent accidental drag with mouse on touch devices
