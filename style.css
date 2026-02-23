@@ -1532,12 +1532,12 @@ footer {
         height: 340px;
     }
 
-    /* Testimonials: keep height compact but let cards fill width nicely */
+    /* Testimonials: center cards nicely on mobile */
     #testimonials .slider-container {
-        padding: 0 12px;
+        padding: 0 20px;
     }
-    #testimonials .testimonial-card {
-        height: 280px;
+    #testimonials .slider-wrapper {
+        padding: 24px 0;
     }
     
     p {
