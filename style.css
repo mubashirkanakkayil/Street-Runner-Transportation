@@ -1197,8 +1197,6 @@ footer {
 .testimonials-section .slider-container {
     padding: 0 48px;
     margin-top: 24px;
-    touch-action: pan-x;
-    overscroll-behavior-x: contain;
 }
 
 .contact-header {
@@ -1211,8 +1209,6 @@ footer {
     width: 100%;
     margin-top: 40px;
     padding: 0 50px;
-    touch-action: pan-x;
-    overscroll-behavior-x: contain;
 }
 
 .slider-wrapper {
@@ -1467,34 +1463,13 @@ footer {
         padding: 0;
     }
     
-    /* Show slider buttons on mobile/tablet but make them smaller */
-    .slider-btn {
-        display: flex;
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(5px);
-    }
-    .slider-btn:hover {
-        background: black;
-        color: white;
-    }
-    /* Adjust position to not cover too much content */
-    .prev-btn { left: 10px; }
-    .next-btn { right: 10px; }
-}
-
-@media (max-width: 768px) {
-    /* Hide slider arrows on mobile */
+    /* Hide slider arrows on touch-size devices (tablet and mobile) */
     .slider-btn {
         display: none;
     }
-    .journey-section .slider-btn,
-    #testimonials .slider-btn {
-        display: flex;
-    }
-    
+}
+
+@media (max-width: 768px) {
     /* General Mobile Layout */
     .container {
         padding: 0 20px;
@@ -1548,6 +1523,21 @@ footer {
     
     h2 {
         font-size: 1.75rem;
+    }
+
+    /* Journey slider cards: slightly larger on mobile to fill screen nicely */
+    #journey .journey-card {
+        width: 80vw;
+        min-width: 260px;
+        height: 340px;
+    }
+
+    /* Testimonials: keep height compact but let cards fill width nicely */
+    #testimonials .slider-container {
+        padding: 0 12px;
+    }
+    #testimonials .testimonial-card {
+        height: 280px;
     }
     
     p {
