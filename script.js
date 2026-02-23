@@ -212,7 +212,7 @@ window.addEventListener('load', () => {
             startAutoPlay();
         };
         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
-        const allowSwipe = isTouchDevice && window.innerWidth <= 1024;
+        const allowSwipe = false;
         if (allowSwipe && sliderContainer) {
             sliderContainer.addEventListener('touchstart', (e) => { onStart(e.touches[0].clientX); dragStep = getSlideWidth(); }, { passive: true });
             sliderContainer.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX), { passive: true });
@@ -716,7 +716,7 @@ window.addEventListener('load', () => {
             dragStep = 0;
         };
         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
-        const allowSwipe = isTouchDevice && window.innerWidth < 1024;
+        const allowSwipe = false;
         if (allowSwipe) {
             tContainer.addEventListener('touchstart', (e) => {
                 onStart(e.touches[0].clientX);

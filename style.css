@@ -1490,6 +1490,10 @@ footer {
     .slider-btn {
         display: none;
     }
+    .journey-section .slider-btn,
+    #testimonials .slider-btn {
+        display: flex;
+    }
     
     /* General Mobile Layout */
     .container {
