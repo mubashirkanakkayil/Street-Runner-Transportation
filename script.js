@@ -583,21 +583,27 @@ window.addEventListener('load', () => {
         let isTransitioning = false;
         const supportPointer = 'PointerEvent' in window;
         tSlides.forEach((_, index) => {
+            const hit = document.createElement('button');
+            hit.classList.add('dot-hit');
+            hit.type = 'button';
             const dot = document.createElement('div');
             dot.classList.add('dot');
             if (index === 0) dot.classList.add('active');
+            hit.appendChild(dot);
             const activateDot = (e) => {
-                if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                if (!e) return;
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                if (typeof e.preventDefault === 'function') e.preventDefault();
                 if (isTransitioning) return;
                 currentIndex = index + cloneCount;
                 updateSlider(true);
             };
             if (supportPointer) {
-                dot.addEventListener('pointerup', activateDot, { passive: true });
+                hit.addEventListener('pointerup', activateDot);
             } else {
-                dot.addEventListener('click', activateDot);
+                hit.addEventListener('click', activateDot);
             }
-            if (tDotsContainer) tDotsContainer.appendChild(dot);
+            if (tDotsContainer) tDotsContainer.appendChild(hit);
         });
         const updateDots = () => {
             const dots = tDotsContainer ? tDotsContainer.querySelectorAll('.dot') : [];

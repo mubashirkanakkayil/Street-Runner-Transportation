@@ -232,7 +232,7 @@ p {
     left: 0;
     width: 100%;
     z-index: 10;
-    padding: 20px 0 20px 40px; /* Aligned with hero-section padding context */
+    padding: 20px 20px; /* Align with hero-section horizontal padding */
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -249,7 +249,26 @@ p {
     display: flex;
     gap: 12px;
     width: max-content;
-    padding-right: 60px;
+    padding-right: 20px;
+}
+
+@media (min-width: 1024px) {
+    .subheader-container {
+        overflow-x: visible;
+        padding: 20px 20px;
+        justify-content: flex-start;
+    }
+    .quick-filters {
+        width: auto;
+        gap: 6px;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+    }
+    .filter-btn {
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
 }
 
 .filter-btn {
@@ -1384,6 +1403,19 @@ footer {
     margin-top: 30px;
 }
 
+/* Larger invisible hit area around each dot for better touch targets */
+.dot-hit {
+    min-width: 40px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
 .dot {
     width: 10px;
     height: 10px;
@@ -1401,6 +1433,15 @@ footer {
 
 .testimonials-section .dot {
     background: rgba(255,255,255,0.4);
+}
+
+/* Tweak dot gaps per section */
+.testimonials-section .slider-dots {
+    gap: 4px;
+}
+
+#journey .slider-dots {
+    gap: 14px;
 }
 .testimonials-section .dot.active {
     background: #1b4d33;
