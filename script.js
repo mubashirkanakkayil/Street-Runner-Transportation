@@ -140,7 +140,10 @@ window.addEventListener('load', () => {
         };
 
         const stopAutoPlay = () => {
-            clearInterval(autoPlayInterval);
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+            }
         };
 
         const resetAutoPlay = () => {
@@ -227,7 +230,21 @@ window.addEventListener('load', () => {
             resizeTimeout = setTimeout(() => updateSlider(false), 120);
         }, { passive: true });
 
-        startAutoPlay();
+        const journeySection = document.querySelector('#journey');
+        if (journeySection && 'IntersectionObserver' in window) {
+            const visibilityObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.2) {
+                        startAutoPlay();
+                    } else {
+                        stopAutoPlay();
+                    }
+                });
+            }, { threshold: [0, 0.2, 0.5] });
+            visibilityObserver.observe(journeySection);
+        } else {
+            startAutoPlay();
+        }
     }
 });
 
@@ -314,31 +331,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 3D Tilt Effect for Cards
+    // 3D Tilt Effect for Cards (desktop / fine pointer only)
     const tiltElements = document.querySelectorAll('.service-item, .quote-card, .mv-card');
-    
-    tiltElements.forEach(el => {
-        el.addEventListener('mousemove', (e) => {
-            const rect = el.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+    const isCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (!isCoarsePointer) {
+        tiltElements.forEach(el => {
+            el.addEventListener('mousemove', (e) => {
+                const rect = el.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = ((y - centerY) / centerY) * -5;
+                const rotateY = ((x - centerX) / centerX) * 5;
+                
+                el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+                el.style.transition = 'transform 0.1s ease';
+            });
             
-            // Calculate rotation based on cursor position relative to center
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            
-            const rotateX = ((y - centerY) / centerY) * -5; // Max 5deg rotation
-            const rotateY = ((x - centerX) / centerX) * 5;
-            
-            el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
-            el.style.transition = 'transform 0.1s ease';
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+                el.style.transition = 'transform 0.5s ease';
+            });
         });
-        
-        el.addEventListener('mouseleave', () => {
-            el.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
-            el.style.transition = 'transform 0.5s ease';
-        });
-    });
+    }
 
     // Navbar Scroll Effect
     const navbar = document.querySelector('.navbar');
@@ -501,10 +519,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const revealElements = document.querySelectorAll('.reveal-on-scroll, .reveal-fade, .reveal-scale, .reveal-pop, .reveal-slide-left, .reveal-slide-right');
     revealElements.forEach(el => observer.observe(el));
 
-    // Parallax Effect
+    // Parallax Effect (desktop only, respect reduced motion)
     const parallaxElements = document.querySelectorAll('.parallax-bg');
     
-    if (parallaxElements.length > 0) {
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const parallaxOnCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    
+    if (parallaxElements.length > 0 && !prefersReducedMotion && !parallaxOnCoarsePointer) {
         let ticking = false;
         
         window.addEventListener('scroll', () => {
