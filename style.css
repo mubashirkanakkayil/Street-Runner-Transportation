@@ -1414,6 +1414,14 @@ footer {
     background: transparent;
     border: none;
     padding: 0;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.dot-hit:focus,
+.dot-hit:focus-visible {
+    outline: none;
+    box-shadow: none;
 }
 
 .dot {
@@ -1437,7 +1445,11 @@ footer {
 
 /* Tweak dot gaps per section */
 .testimonials-section .slider-dots {
-    gap: 4px;
+    gap: 0;
+}
+
+#testimonials .dot-hit {
+    margin: 0 -6px;
 }
 
 #journey .slider-dots {
