@@ -1431,6 +1431,8 @@ footer {
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.3s;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .dot.active {
