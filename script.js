@@ -36,25 +36,31 @@ window.addEventListener('load', () => {
         let isTransitioning = false;
         let autoPlayInterval;
 
-        // Create Dots (pointer-friendly)
+        // Create Dots (pointer-friendly, larger hit area)
         const supportPointer = 'PointerEvent' in window;
         originalSlides.forEach((_, index) => {
+            const hit = document.createElement('button');
+            hit.classList.add('dot-hit');
+            hit.type = 'button';
             const dot = document.createElement('div');
             dot.classList.add('dot');
             if (index === 0) dot.classList.add('active');
+            hit.appendChild(dot);
             const activateDot = (e) => {
-                if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                if (!e) return;
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                if (typeof e.preventDefault === 'function') e.preventDefault();
                 if (isTransitioning) return;
                 currentIndex = index + cloneCount;
                 updateSlider(true);
                 resetAutoPlay();
             };
             if (supportPointer) {
-                dot.addEventListener('pointerup', activateDot, { passive: true });
+                hit.addEventListener('pointerup', activateDot);
             } else {
-                dot.addEventListener('click', activateDot);
+                hit.addEventListener('click', activateDot);
             }
-            dotsContainer.appendChild(dot);
+            dotsContainer.appendChild(hit);
         });
 
         const updateDots = () => {
@@ -669,6 +675,24 @@ window.addEventListener('load', () => {
             updateDots();
         };
         updateSlider(false);
+
+        let tAutoPlayInterval = null;
+        const tStartAutoPlay = () => {
+            if (tAutoPlayInterval) return;
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            tAutoPlayInterval = setInterval(() => {
+                if (document.visibilityState !== 'visible') return;
+                if (isTransitioning) return;
+                currentIndex++;
+                updateSlider(true);
+            }, 6000);
+        };
+        const tStopAutoPlay = () => {
+            if (!tAutoPlayInterval) return;
+            clearInterval(tAutoPlayInterval);
+            tAutoPlayInterval = null;
+        };
+
         const nextSlide = () => {
             if (isTransitioning) return;
             currentIndex++;
@@ -689,8 +713,16 @@ window.addEventListener('load', () => {
                 updateSlider(false);
             }
         });
-        if (tNext) tNext.addEventListener('click', nextSlide);
-        if (tPrev) tPrev.addEventListener('click', prevSlide);
+        if (tNext) tNext.addEventListener('click', () => {
+            nextSlide();
+            tStopAutoPlay();
+            tStartAutoPlay();
+        });
+        if (tPrev) tPrev.addEventListener('click', () => {
+            prevSlide();
+            tStopAutoPlay();
+            tStartAutoPlay();
+        });
         let startX = 0;
         let dragging = false;
         let dragDelta = 0;
@@ -741,11 +773,14 @@ window.addEventListener('load', () => {
             }
             dragDelta = 0;
             dragStep = 0;
+            tStopAutoPlay();
+            tStartAutoPlay();
         };
         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
-        const allowSwipe = false;
+        const allowSwipe = isTouchDevice;
         if (allowSwipe) {
             tContainer.addEventListener('touchstart', (e) => {
+                tStopAutoPlay();
                 onStart(e.touches[0].clientX);
                 dragStep = getSlideWidth();
             }, { passive: true });
@@ -760,5 +795,21 @@ window.addEventListener('load', () => {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => updateSlider(false), 120);
         }, { passive: true });
+
+        const testimonialsSection = document.querySelector('#testimonials');
+        if (testimonialsSection && 'IntersectionObserver' in window) {
+            const tVisibilityObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.2) {
+                        tStartAutoPlay();
+                    } else {
+                        tStopAutoPlay();
+                    }
+                });
+            }, { threshold: [0, 0.2, 0.5] });
+            tVisibilityObserver.observe(testimonialsSection);
+        } else {
+            tStartAutoPlay();
+        }
     }
 });

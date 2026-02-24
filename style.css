@@ -1455,7 +1455,21 @@ footer {
 }
 
 #journey .slider-dots {
-    gap: 14px;
+    gap: 2px;
+}
+
+#journey .dot-hit {
+    margin: 0 -4px;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#journey .dot-hit:focus,
+#journey .dot-hit:focus-visible,
+#journey .dot-hit:active {
+    outline: none;
+    box-shadow: none;
+    border: none;
 }
 .testimonials-section .dot.active {
     background: #1b4d33;
