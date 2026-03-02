@@ -572,6 +572,70 @@ window.addEventListener('load', () => {
     const tNext = document.querySelector('#testimonials .next-btn');
     const tDotsContainer = document.querySelector('#testimonials .slider-dots');
     if (tTrack && tSlides.length > 0) {
+        // --- Mobile Native Scroll Logic ---
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+        
+        if (isMobile) {
+            if (tDotsContainer) {
+                tDotsContainer.innerHTML = '';
+                tSlides.forEach((_, index) => {
+                    const dotWrapper = document.createElement('button');
+                    dotWrapper.classList.add('dot-hit');
+                    dotWrapper.type = 'button';
+                    dotWrapper.ariaLabel = `Go to slide ${index + 1}`;
+                    const dot = document.createElement('div');
+                    dot.classList.add('dot');
+                    if (index === 0) dot.classList.add('active');
+                    dotWrapper.appendChild(dot);
+                    tDotsContainer.appendChild(dotWrapper);
+                    
+                    dotWrapper.addEventListener('click', () => {
+                        const card = tSlides[index];
+                        const wrapper = tTrack.parentElement;
+                        if (card && wrapper) {
+                            const cardLeft = card.offsetLeft;
+                             wrapper.scrollTo({
+                                left: cardLeft - (wrapper.clientWidth - card.offsetWidth) / 2,
+                                behavior: 'smooth'
+                            });
+                        }
+                    });
+                });
+
+                const wrapper = tTrack.parentElement;
+                let scrollTimeout;
+                
+                const updateActiveDotOnScroll = () => {
+                    const center = wrapper.scrollLeft + wrapper.clientWidth / 2;
+                    let closestIndex = 0;
+                    let minDistance = Infinity;
+
+                    tSlides.forEach((slide, index) => {
+                        const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+                        const dist = Math.abs(center - slideCenter);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            closestIndex = index;
+                        }
+                    });
+
+                    const allDots = tDotsContainer.querySelectorAll('.dot');
+                    allDots.forEach((d, i) => {
+                        if (i === closestIndex) d.classList.add('active');
+                        else d.classList.remove('active');
+                    });
+                };
+
+                if (wrapper) {
+                    wrapper.addEventListener('scroll', () => {
+                        if (scrollTimeout) clearTimeout(scrollTimeout);
+                        scrollTimeout = setTimeout(updateActiveDotOnScroll, 50); 
+                    }, { passive: true });
+                }
+            }
+            return; 
+        }
+
         const slidesCount = tSlides.length;
         const cloneCount = 2;
         for (let i = slidesCount - cloneCount; i < slidesCount; i++) {

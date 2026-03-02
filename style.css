@@ -1536,8 +1536,8 @@ footer p {
 
 /* Larger invisible hit area around each dot for better touch targets */
 .dot-hit {
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 50px; /* Increased from 40px */
+    min-height: 50px; /* Increased from 40px */
     display: inline-flex;
     align-items: center;
     justify-content: center;
