@@ -784,6 +784,10 @@ p {
     font-size: 0.95rem;
     opacity: 0.8;
     transition: opacity 0.3s;
+    text-align: left;
+    hyphens: none;
+    -webkit-hyphens: none;
+    -ms-hyphens: none;
 }
 
 .service-item:hover .service-info p {
@@ -2008,6 +2012,20 @@ body.menu-open .whatsapp-float {
     }
     .services-masonry {
         gap: 24px;
+    }
+}
+@media (pointer: coarse) and (min-width: 992px) {
+    .services-masonry {
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: auto;
+        gap: 12px;
+    }
+    .service-item {
+        height: 240px;
+    }
+    .service-item.large {
+        grid-column: span 2;
+        height: 360px;
     }
 }
 @media (max-width: 768px) {
