@@ -1036,6 +1036,8 @@ p {
     border-radius: 10px;
     font-family: var(--font-main);
     font-size: 1rem;
+    max-width: 100%; /* Prevent overflowing horizontally */
+    resize: vertical; /* Allow resizing only vertically */
 }
 
 .input-field:focus {
@@ -1054,6 +1056,12 @@ footer {
     padding: 40px 0;
     text-align: center;
     border-top: 1px solid #eee;
+    width: 100%;
+}
+
+footer p {
+    text-align: center !important; /* Force center alignment */
+    margin: 0;
 }
 
 /* Animation Enhancements */
@@ -1728,9 +1736,30 @@ footer {
     /* Testimonials: center cards nicely on mobile */
     #testimonials .slider-container {
         padding: 0 20px;
+        touch-action: pan-y; /* Allow vertical scroll, handle horizontal in JS */
     }
     #testimonials .slider-wrapper {
         padding: 24px 0;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Hide scrollbar Firefox */
+    }
+    #testimonials .slider-wrapper::-webkit-scrollbar {
+        display: none; /* Hide scrollbar Chrome/Safari */
+    }
+    
+    #testimonials .slider-track {
+        display: flex;
+        gap: 16px;
+        width: max-content;
+    }
+
+    .testimonial-card {
+        scroll-snap-align: center;
+        flex: 0 0 85vw; /* Show one card plus a peek of next */
+        width: 85vw;
+        margin-right: 0;
     }
     
     p {
@@ -2032,5 +2061,60 @@ body.menu-open .whatsapp-float {
     .section-header p,
     .contact-header p {
         text-align: center;
+    }
+
+    /* Optimize Contact Cards for Mobile */
+    .contact-details, 
+    .contact-form-side {
+        padding: 30px 20px;
+    }
+
+    .contact-details h3, 
+    .contact-form-side h3 {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+        text-align: justify;
+        line-height: 1.4;
+    }
+
+    .cd-row {
+        gap: 15px;
+        margin-bottom: 20px;
+        align-items: flex-start;
+    }
+
+    .cd-row p {
+        flex: 1;
+        text-align: justify;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+    
+    .cd-row p.address-text {
+        text-align: left;
+    }
+    
+    .captcha-note {
+        text-align: justify;
+    }
+    
+    .hours-box {
+        margin-top: 25px;
+        padding-top: 20px;
+    }
+    
+    .hours-box ul li {
+        font-size: 0.85rem;
+    }
+
+    .mobile-break {
+        display: block;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-break {
+        display: none;
     }
 }
