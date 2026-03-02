@@ -572,70 +572,6 @@ window.addEventListener('load', () => {
     const tNext = document.querySelector('#testimonials .next-btn');
     const tDotsContainer = document.querySelector('#testimonials .slider-dots');
     if (tTrack && tSlides.length > 0) {
-        // --- Mobile Native Scroll Logic ---
-        const isMobile = window.matchMedia('(max-width: 768px)').matches;
-        
-        if (isMobile) {
-            if (tDotsContainer) {
-                tDotsContainer.innerHTML = '';
-                tSlides.forEach((_, index) => {
-                    const dotWrapper = document.createElement('button');
-                    dotWrapper.classList.add('dot-hit');
-                    dotWrapper.type = 'button';
-                    dotWrapper.ariaLabel = `Go to slide ${index + 1}`;
-                    const dot = document.createElement('div');
-                    dot.classList.add('dot');
-                    if (index === 0) dot.classList.add('active');
-                    dotWrapper.appendChild(dot);
-                    tDotsContainer.appendChild(dotWrapper);
-                    
-                    dotWrapper.addEventListener('click', () => {
-                        const card = tSlides[index];
-                        const wrapper = tTrack.parentElement;
-                        if (card && wrapper) {
-                            const cardLeft = card.offsetLeft;
-                             wrapper.scrollTo({
-                                left: cardLeft - (wrapper.clientWidth - card.offsetWidth) / 2,
-                                behavior: 'smooth'
-                            });
-                        }
-                    });
-                });
-
-                const wrapper = tTrack.parentElement;
-                let scrollTimeout;
-                
-                const updateActiveDotOnScroll = () => {
-                    const center = wrapper.scrollLeft + wrapper.clientWidth / 2;
-                    let closestIndex = 0;
-                    let minDistance = Infinity;
-
-                    tSlides.forEach((slide, index) => {
-                        const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
-                        const dist = Math.abs(center - slideCenter);
-                        if (dist < minDistance) {
-                            minDistance = dist;
-                            closestIndex = index;
-                        }
-                    });
-
-                    const allDots = tDotsContainer.querySelectorAll('.dot');
-                    allDots.forEach((d, i) => {
-                        if (i === closestIndex) d.classList.add('active');
-                        else d.classList.remove('active');
-                    });
-                };
-
-                if (wrapper) {
-                    wrapper.addEventListener('scroll', () => {
-                        if (scrollTimeout) clearTimeout(scrollTimeout);
-                        scrollTimeout = setTimeout(updateActiveDotOnScroll, 50); 
-                    }, { passive: true });
-                }
-            }
-            return; 
-        }
-
         const slidesCount = tSlides.length;
         const cloneCount = 2;
         for (let i = slidesCount - cloneCount; i < slidesCount; i++) {
@@ -664,9 +600,32 @@ window.addEventListener('load', () => {
                 if (!e) return;
                 if (typeof e.stopPropagation === 'function') e.stopPropagation();
                 if (typeof e.preventDefault === 'function') e.preventDefault();
-                if (isTransitioning) return;
-                currentIndex = index + cloneCount;
-                updateSlider(true);
+                
+                if (window.innerWidth < 768) {
+                    // Mobile: scroll to card
+                    // We need to account for the gap and the initial padding if any
+                    // The tSlides includes clones, so we need to find the correct index in the original list
+                    // tSlides is the NodeList of original slides before cloning
+                    
+                    const cardWidth = tSlides[0].offsetWidth + 16; // 16px gap
+                    // Find the scroll position for the clicked dot index
+                    // Note: snap scrolling doesn't use clones in the same way, but let's assume standard flow
+                    // We are scrolling the slider-wrapper which is inside slider-container
+                    // Wait, tContainer is .slider-container, but we enabled scroll on .slider-wrapper in CSS
+                    
+                    const wrapper = document.querySelector('#testimonials .slider-wrapper');
+                    if (wrapper) {
+                        wrapper.scrollTo({
+                            left: index * cardWidth,
+                            behavior: 'smooth'
+                        });
+                    }
+                } else {
+                    // Desktop: transform
+                    if (isTransitioning) return;
+                    currentIndex = index + cloneCount;
+                    updateSlider(true);
+                }
             };
             if (supportPointer) {
                 hit.addEventListener('pointerup', activateDot);
@@ -676,13 +635,55 @@ window.addEventListener('load', () => {
             if (tDotsContainer) tDotsContainer.appendChild(hit);
         });
         const updateDots = () => {
-            const dots = tDotsContainer ? tDotsContainer.querySelectorAll('.dot') : [];
-            dots.forEach(d => d.classList.remove('active'));
-            let realIndex = currentIndex - cloneCount;
-            if (realIndex < 0) realIndex = slidesCount - 1;
-            if (realIndex >= slidesCount) realIndex = 0;
-            if (dots[realIndex]) dots[realIndex].classList.add('active');
+            if (!tDotsContainer) return;
+            const dots = tDotsContainer.querySelectorAll('.dot');
+            if (dots.length === 0) return;
+            
+            // On mobile with scroll snap, we calculate index from scroll position
+            if (window.innerWidth < 768) {
+                const scrollLeft = tContainer.scrollLeft;
+                const cardWidth = tSlides[0].offsetWidth + 16; // 16px gap
+                // Calculate which slide is most centered
+                let activeIndex = Math.round(scrollLeft / cardWidth);
+                // Wrap around logic for infinite feel if needed, but for snap we just clamp
+                if (activeIndex < 0) activeIndex = 0;
+                if (activeIndex >= slidesCount) activeIndex = slidesCount - 1;
+                
+                dots.forEach((d, i) => {
+                    if (i === activeIndex) d.classList.add('active');
+                    else d.classList.remove('active');
+                });
+            } else {
+                // Desktop logic (transform-based)
+                dots.forEach(d => d.classList.remove('active'));
+                let realIndex = currentIndex - cloneCount;
+                if (realIndex < 0) realIndex = slidesCount - 1;
+                while (realIndex >= slidesCount) realIndex -= slidesCount;
+                if (dots[realIndex]) dots[realIndex].classList.add('active');
+            }
         };
+
+        // Add scroll listener for mobile dots sync
+        const tWrapper = document.querySelector('#testimonials .slider-wrapper');
+        if (tWrapper) {
+            tWrapper.addEventListener('scroll', () => {
+                if (window.innerWidth < 768) {
+                    const scrollLeft = tWrapper.scrollLeft;
+                    const cardWidth = tSlides[0].offsetWidth + 16;
+                    let activeIndex = Math.round(scrollLeft / cardWidth);
+                    
+                    // Simple clamp
+                    if (activeIndex < 0) activeIndex = 0;
+                    if (activeIndex >= tSlides.length) activeIndex = tSlides.length - 1;
+                    
+                    const dots = tDotsContainer ? tDotsContainer.querySelectorAll('.dot') : [];
+                    dots.forEach((d, i) => {
+                         if (i === activeIndex) d.classList.add('active');
+                         else d.classList.remove('active');
+                    });
+                }
+            }, { passive: true });
+        }
         const getSlideWidth = () => {
             const trackStyles = window.getComputedStyle(tTrack);
             const gap = parseInt(trackStyles.gap) || 30;
