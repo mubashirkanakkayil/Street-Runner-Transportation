@@ -221,7 +221,7 @@ window.addEventListener('load', () => {
             startAutoPlay();
         };
         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
-        const allowSwipe = false;
+        const allowSwipe = isTouchDevice; // enable swipe on touch devices
         if (allowSwipe && sliderContainer) {
             sliderContainer.addEventListener('touchstart', (e) => { onStart(e.touches[0].clientX); dragStep = getSlideWidth(); }, { passive: true });
             sliderContainer.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX), { passive: true });
@@ -566,6 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('load', () => {
     const tContainer = document.querySelector('#testimonials .slider-container');
+    const tWrapper = document.querySelector('#testimonials .slider-wrapper');
     const tTrack = document.querySelector('#testimonials .slider-track');
     const tSlides = document.querySelectorAll('#testimonials .testimonial-card');
     const tPrev = document.querySelector('#testimonials .prev-btn');
@@ -574,6 +575,8 @@ window.addEventListener('load', () => {
     if (tTrack && tSlides.length > 0) {
         const slidesCount = tSlides.length;
         const cloneCount = 2;
+        
+        // Clone for all devices to support infinite loop
         for (let i = slidesCount - cloneCount; i < slidesCount; i++) {
             const clone = tSlides[i].cloneNode(true);
             clone.classList.add('clone');
@@ -584,6 +587,7 @@ window.addEventListener('load', () => {
             clone.classList.add('clone');
             tTrack.appendChild(clone);
         }
+        
         const allSlides = document.querySelectorAll('#testimonials .testimonial-card');
         let currentIndex = cloneCount;
         let isTransitioning = false;
@@ -602,21 +606,11 @@ window.addEventListener('load', () => {
                 if (typeof e.preventDefault === 'function') e.preventDefault();
                 
                 if (window.innerWidth < 768) {
-                    // Mobile: scroll to card
-                    // We need to account for the gap and the initial padding if any
-                    // The tSlides includes clones, so we need to find the correct index in the original list
-                    // tSlides is the NodeList of original slides before cloning
-                    
                     const cardWidth = tSlides[0].offsetWidth + 16; // 16px gap
-                    // Find the scroll position for the clicked dot index
-                    // Note: snap scrolling doesn't use clones in the same way, but let's assume standard flow
-                    // We are scrolling the slider-wrapper which is inside slider-container
-                    // Wait, tContainer is .slider-container, but we enabled scroll on .slider-wrapper in CSS
-                    
-                    const wrapper = document.querySelector('#testimonials .slider-wrapper');
-                    if (wrapper) {
-                        wrapper.scrollTo({
-                            left: index * cardWidth,
+                    // For mobile infinite loop, we target the clones offset
+                    if (tWrapper) {
+                        tWrapper.scrollTo({
+                            left: (index + cloneCount) * cardWidth,
                             behavior: 'smooth'
                         });
                     }
@@ -639,18 +633,22 @@ window.addEventListener('load', () => {
             const dots = tDotsContainer.querySelectorAll('.dot');
             if (dots.length === 0) return;
             
-            // On mobile with scroll snap, we calculate index from scroll position
             if (window.innerWidth < 768) {
-                const scrollLeft = tContainer.scrollLeft;
-                const cardWidth = tSlides[0].offsetWidth + 16; // 16px gap
-                // Calculate which slide is most centered
-                let activeIndex = Math.round(scrollLeft / cardWidth);
-                // Wrap around logic for infinite feel if needed, but for snap we just clamp
-                if (activeIndex < 0) activeIndex = 0;
-                if (activeIndex >= slidesCount) activeIndex = slidesCount - 1;
+                const scrollLeft = tWrapper ? tWrapper.scrollLeft : 0;
+                const cardWidth = tSlides[0].offsetWidth + 16;
+                // Calculate raw index from scroll position
+                let rawIndex = Math.round(scrollLeft / cardWidth);
+                
+                // Convert raw index (including clones) to logical slide index
+                // rawIndex = 0 or 1 -> clones of end
+                // rawIndex = cloneCount -> first real slide
+                let realIndex = rawIndex - cloneCount;
+                
+                if (realIndex < 0) realIndex = slidesCount + realIndex; // wrap around from start clones
+                while (realIndex >= slidesCount) realIndex -= slidesCount; // wrap around from end clones
                 
                 dots.forEach((d, i) => {
-                    if (i === activeIndex) d.classList.add('active');
+                    if (i === realIndex) d.classList.add('active');
                     else d.classList.remove('active');
                 });
             } else {
@@ -663,50 +661,81 @@ window.addEventListener('load', () => {
             }
         };
 
-        // Add scroll listener for mobile dots sync
-        const tWrapper = document.querySelector('#testimonials .slider-wrapper');
+        // Add scroll listener for mobile dots sync and infinite loop
         if (tWrapper) {
             tWrapper.addEventListener('scroll', () => {
                 if (window.innerWidth < 768) {
                     const scrollLeft = tWrapper.scrollLeft;
                     const cardWidth = tSlides[0].offsetWidth + 16;
-                    let activeIndex = Math.round(scrollLeft / cardWidth);
                     
-                    // Simple clamp
-                    if (activeIndex < 0) activeIndex = 0;
-                    if (activeIndex >= tSlides.length) activeIndex = tSlides.length - 1;
+                    // Update dots
+                    let rawIndex = Math.round(scrollLeft / cardWidth);
+                    let realIndex = rawIndex - cloneCount;
+                    if (realIndex < 0) realIndex = slidesCount + realIndex;
+                    while (realIndex >= slidesCount) realIndex -= slidesCount;
                     
                     const dots = tDotsContainer ? tDotsContainer.querySelectorAll('.dot') : [];
                     dots.forEach((d, i) => {
-                         if (i === activeIndex) d.classList.add('active');
+                         if (i === realIndex) d.classList.add('active');
                          else d.classList.remove('active');
                     });
+
+                    // Infinite loop check
+                    // If scrolled to near start (first clone set)
+                    if (scrollLeft < cardWidth * 0.5) {
+                        // Jump to end real set
+                        tWrapper.style.scrollBehavior = 'auto';
+                        tWrapper.scrollLeft = scrollLeft + (slidesCount * cardWidth);
+                        tWrapper.style.scrollBehavior = 'smooth';
+                    }
+                    // If scrolled to near end (last clone set)
+                    else if (scrollLeft > (slidesCount + cloneCount + 0.5) * cardWidth) {
+                        // Jump to start real set
+                        tWrapper.style.scrollBehavior = 'auto';
+                        tWrapper.scrollLeft = scrollLeft - (slidesCount * cardWidth);
+                        tWrapper.style.scrollBehavior = 'smooth';
+                    }
                 }
             }, { passive: true });
+            
+            // Initial scroll position for mobile (start at first real slide)
+            if (window.innerWidth < 768) {
+                // Wait for layout
+                requestAnimationFrame(() => {
+                    const cardWidth = tSlides[0].offsetWidth + 16;
+                    tWrapper.scrollLeft = cloneCount * cardWidth;
+                });
+            }
         }
         const getSlideWidth = () => {
             const trackStyles = window.getComputedStyle(tTrack);
             const gap = parseInt(trackStyles.gap) || 30;
-            let visibleCount = 3;
             const w = window.innerWidth;
+            
+            // On mobile, let CSS handle sizing (flex: 0 0 85vw)
+            // We only need to return the width for scroll calculations
+            if (w < 768) {
+                allSlides.forEach(slide => {
+                    slide.style.flexBasis = ''; // Clear inline style so CSS takes over
+                });
+                // Measure the first slide (which should be sized by CSS)
+                // Note: tSlides[0] might be a clone or original, but they share the class
+                return tSlides[0].offsetWidth + gap;
+            }
+
+            let visibleCount = 3;
             if (w < 1024 && w >= 768) {
                 visibleCount = 2;
-            } else if (w < 768) {
-                visibleCount = 1;
-            }
+            } 
+            
             const parent = tTrack.parentElement;
             const parentStyles = window.getComputedStyle(parent);
             const padL = parseInt(parentStyles.paddingLeft) || 0;
             const padR = parseInt(parentStyles.paddingRight) || 0;
             const wrapperWidth = parent.offsetWidth;
             const contentWidth = wrapperWidth - padL - padR;
-            let cardWidth;
-            if (visibleCount === 1) {
-                const hoverScale = 1.02;
-                cardWidth = Math.floor(contentWidth / hoverScale);
-            } else {
-                cardWidth = (contentWidth - gap * (visibleCount - 1)) / visibleCount;
-            }
+            let cardWidth = (contentWidth - gap * (visibleCount - 1)) / visibleCount;
+            
             allSlides.forEach(slide => {
                 slide.style.flexBasis = `${cardWidth}px`;
             });
@@ -714,6 +743,7 @@ window.addEventListener('load', () => {
         };
         let unlockTimer = null;
         const updateSlider = (smooth = true) => {
+            if (window.innerWidth < 768) return; // we rely on native scroll-snap instead of transforms
             const totalItemWidth = getSlideWidth();
             if (smooth) {
                 tTrack.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
@@ -739,7 +769,7 @@ window.addEventListener('load', () => {
             tTrack.style.transform = `translateX(${-(currentIndex * totalItemWidth) + offset}px)`;
             updateDots();
         };
-        updateSlider(false);
+        if (window.innerWidth >= 768) updateSlider(false);
 
         let tAutoPlayInterval = null;
         const tStartAutoPlay = () => {
@@ -791,10 +821,12 @@ window.addEventListener('load', () => {
         let startX = 0;
         let dragging = false;
         let dragDelta = 0;
+        let startScroll = 0;
         const onStart = (x) => {
             dragging = true;
             startX = x;
-            tTrack.style.transition = 'none';
+            startScroll = tWrapper ? tWrapper.scrollLeft : 0;
+            if (!isMobile) tTrack.style.transition = 'none';
         };
         let rafPending = false;
         let lastX = 0;
@@ -802,6 +834,11 @@ window.addEventListener('load', () => {
         const onMove = (x) => {
             if (!dragging) return;
             lastX = x;
+            dragDelta = lastX - startX;
+            if (isMobile && tWrapper) {
+                tWrapper.scrollLeft = startScroll - dragDelta;
+                return;
+            }
             if (rafPending) return;
             rafPending = true;
             requestAnimationFrame(() => {
@@ -819,7 +856,6 @@ window.addEventListener('load', () => {
                     const contentWidth = wrapperWidth - padL - padR;
                     offset = Math.round((contentWidth - cardWidth) / 2) - padL;
                 }
-                dragDelta = lastX - startX;
                 tTrack.style.transform = `translateX(${-(currentIndex * totalItemWidth) + offset + dragDelta}px)`;
                 rafPending = false;
             });
@@ -830,11 +866,20 @@ window.addEventListener('load', () => {
             const totalItemWidth = dragStep || getSlideWidth();
             const threshold = Math.max(50, totalItemWidth * 0.15);
             if (dragDelta > threshold) {
-                prevSlide();
+                if (isMobile && tWrapper) {
+                    tWrapper.scrollBy({ left: -totalItemWidth, behavior: 'smooth' });
+                } else {
+                    prevSlide();
+                }
             } else if (dragDelta < -threshold) {
-                nextSlide();
+                if (isMobile && tWrapper) {
+                    tWrapper.scrollBy({ left: totalItemWidth, behavior: 'smooth' });
+                } else {
+                    nextSlide();
+                }
             } else {
-                updateSlider(true);
+                if (!isMobile) updateSlider(true);
+                // on mobile, let scroll-snap settle naturally
             }
             dragDelta = 0;
             dragStep = 0;
@@ -844,16 +889,40 @@ window.addEventListener('load', () => {
         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
         const allowSwipe = isTouchDevice;
         if (allowSwipe) {
-            tContainer.addEventListener('touchstart', (e) => {
+            // On mobile, we bind to tContainer but let native scroll happen
+            // On desktop/touch, we might need custom logic if not using overflow:auto
+            // But here we set overflow:auto for mobile in CSS.
+            
+            const swipeTarget = tContainer; 
+            
+            swipeTarget.addEventListener('touchstart', (e) => {
                 tStopAutoPlay();
+                if (window.innerWidth < 768) return; // Native scroll on mobile
                 onStart(e.touches[0].clientX);
                 dragStep = getSlideWidth();
             }, { passive: true });
-            tContainer.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX), { passive: true });
-            tContainer.addEventListener('touchend', onEnd, { passive: true });
-            tContainer.addEventListener('touchcancel', onEnd, { passive: true });
+            
+            swipeTarget.addEventListener('touchmove', (e) => {
+                if (window.innerWidth < 768) return;
+                onMove(e.touches[0].clientX);
+            }, { passive: true });
+            
+            swipeTarget.addEventListener('touchend', (e) => {
+                if (window.innerWidth < 768) {
+                    tStopAutoPlay();
+                    tStartAutoPlay();
+                    return;
+                }
+                onEnd();
+            }, { passive: true });
+            
+            swipeTarget.addEventListener('touchcancel', (e) => {
+                if (window.innerWidth < 768) return;
+                onEnd();
+            }, { passive: true });
+            
             // Prevent accidental drag with mouse on touch devices
-            tContainer.addEventListener('mouseleave', () => { if (dragging) onEnd(); });
+            swipeTarget.addEventListener('mouseleave', () => { if (dragging) onEnd(); });
         }
         let resizeTimeout = null;
         window.addEventListener('resize', () => {
