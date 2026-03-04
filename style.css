@@ -1407,8 +1407,8 @@ footer p {
     transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
     will-change: transform;
     width: max-content;
-    padding-top: 50px; /* Increased to fully clear hover lift */
-    margin-top: -50px; /* Pull it back so it doesn't add extra height */
+    padding-top: 60px; /* Increased to definitively clear hover lift */
+    margin-top: -60px; /* Pull it back so it doesn't add extra height */
 }
 
 .journey-card {

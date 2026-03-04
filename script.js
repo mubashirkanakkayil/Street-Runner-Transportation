@@ -663,38 +663,67 @@ window.addEventListener('load', () => {
 
         // Add scroll listener for mobile dots sync and infinite loop
         if (tWrapper) {
+            let isScrolling = false;
+            let scrollTimeout = null;
+
             tWrapper.addEventListener('scroll', () => {
                 if (window.innerWidth < 768) {
-                    const scrollLeft = tWrapper.scrollLeft;
-                    const cardWidth = tSlides[0].offsetWidth + 16;
-                    
-                    // Update dots
-                    let rawIndex = Math.round(scrollLeft / cardWidth);
-                    let realIndex = rawIndex - cloneCount;
-                    if (realIndex < 0) realIndex = slidesCount + realIndex;
-                    while (realIndex >= slidesCount) realIndex -= slidesCount;
-                    
-                    const dots = tDotsContainer ? tDotsContainer.querySelectorAll('.dot') : [];
-                    dots.forEach((d, i) => {
-                         if (i === realIndex) d.classList.add('active');
-                         else d.classList.remove('active');
-                    });
+                    // Debounce infinite loop check to prevent layout thrashing
+                    if (!isScrolling) {
+                        window.requestAnimationFrame(() => {
+                            const scrollLeft = tWrapper.scrollLeft;
+                            const cardWidth = tSlides[0].offsetWidth + 16;
+                            
+                            // Update dots
+                            let rawIndex = Math.round(scrollLeft / cardWidth);
+                            let realIndex = rawIndex - cloneCount;
+                            if (realIndex < 0) realIndex = slidesCount + realIndex;
+                            while (realIndex >= slidesCount) realIndex -= slidesCount;
+                            
+                            const dots = tDotsContainer ? tDotsContainer.querySelectorAll('.dot') : [];
+                            dots.forEach((d, i) => {
+                                if (i === realIndex) d.classList.add('active');
+                                else d.classList.remove('active');
+                            });
 
-                    // Infinite loop check
-                    // If scrolled to near start (first clone set)
-                    if (scrollLeft < cardWidth * 0.5) {
-                        // Jump to end real set
-                        tWrapper.style.scrollBehavior = 'auto';
-                        tWrapper.scrollLeft = scrollLeft + (slidesCount * cardWidth);
-                        tWrapper.style.scrollBehavior = 'smooth';
+                            // Infinite loop check - Only jump when scroll stops or is very close to edge
+                            // Using a small tolerance
+                            if (scrollLeft < 10) {
+                                tWrapper.style.scrollBehavior = 'auto';
+                                tWrapper.scrollLeft = scrollLeft + (slidesCount * cardWidth);
+                                tWrapper.style.scrollBehavior = 'smooth';
+                            } else if (scrollLeft > ((slidesCount + cloneCount * 2) * cardWidth) - cardWidth - 10) { 
+                                // Checking against total width minus one card width
+                                tWrapper.style.scrollBehavior = 'auto';
+                                tWrapper.scrollLeft = scrollLeft - (slidesCount * cardWidth);
+                                tWrapper.style.scrollBehavior = 'smooth';
+                            }
+                            
+                            isScrolling = false;
+                        });
+                        isScrolling = true;
                     }
-                    // If scrolled to near end (last clone set)
-                    else if (scrollLeft > (slidesCount + cloneCount + 0.5) * cardWidth) {
-                        // Jump to start real set
-                        tWrapper.style.scrollBehavior = 'auto';
-                        tWrapper.scrollLeft = scrollLeft - (slidesCount * cardWidth);
-                        tWrapper.style.scrollBehavior = 'smooth';
-                    }
+                    
+                    // Clear timeout if it exists
+                    if (scrollTimeout) clearTimeout(scrollTimeout);
+                    
+                    // Check for precise snap alignment after scroll ends
+                    scrollTimeout = setTimeout(() => {
+                        const scrollLeft = tWrapper.scrollLeft;
+                        const cardWidth = tSlides[0].offsetWidth + 16;
+                        
+                        // Infinite loop check logic for when scroll completely stops
+                        if (scrollLeft < cardWidth * 0.5) {
+                            tWrapper.style.scrollBehavior = 'auto';
+                            tWrapper.scrollLeft = scrollLeft + (slidesCount * cardWidth);
+                            tWrapper.style.scrollBehavior = 'smooth';
+                        }
+                        else if (scrollLeft > (slidesCount + cloneCount + 0.5) * cardWidth) {
+                            tWrapper.style.scrollBehavior = 'auto';
+                            tWrapper.scrollLeft = scrollLeft - (slidesCount * cardWidth);
+                            tWrapper.style.scrollBehavior = 'smooth';
+                        }
+                    }, 150);
                 }
             }, { passive: true });
             
@@ -889,28 +918,33 @@ window.addEventListener('load', () => {
         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
         const allowSwipe = isTouchDevice;
         if (allowSwipe) {
-            // On mobile, we bind to tContainer but let native scroll happen
-            // On desktop/touch, we might need custom logic if not using overflow:auto
-            // But here we set overflow:auto for mobile in CSS.
+            // On mobile, we use native scroll-snap, so we DON'T bind custom touch events
+            // to avoid interfering with the browser's optimized scrolling.
+            // We only attach these listeners for desktop/tablet touch scenarios
+            // where we might still rely on transform-based sliding.
             
             const swipeTarget = tContainer; 
             
             swipeTarget.addEventListener('touchstart', (e) => {
+                // If mobile, just stop autoplay and let native scroll happen
+                if (window.innerWidth < 768) {
+                    tStopAutoPlay();
+                    return;
+                }
                 tStopAutoPlay();
-                if (window.innerWidth < 768) return; // Native scroll on mobile
                 onStart(e.touches[0].clientX);
                 dragStep = getSlideWidth();
             }, { passive: true });
             
             swipeTarget.addEventListener('touchmove', (e) => {
-                if (window.innerWidth < 768) return;
+                if (window.innerWidth < 768) return; // Completely ignore on mobile
                 onMove(e.touches[0].clientX);
             }, { passive: true });
             
             swipeTarget.addEventListener('touchend', (e) => {
                 if (window.innerWidth < 768) {
-                    tStopAutoPlay();
-                    tStartAutoPlay();
+                    // Just restart autoplay after a delay
+                    setTimeout(tStartAutoPlay, 2000);
                     return;
                 }
                 onEnd();
@@ -922,7 +956,10 @@ window.addEventListener('load', () => {
             }, { passive: true });
             
             // Prevent accidental drag with mouse on touch devices
-            swipeTarget.addEventListener('mouseleave', () => { if (dragging) onEnd(); });
+            swipeTarget.addEventListener('mouseleave', () => { 
+                if (window.innerWidth < 768) return;
+                if (dragging) onEnd(); 
+            });
         }
         let resizeTimeout = null;
         window.addEventListener('resize', () => {
