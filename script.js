@@ -1,16 +1,17 @@
 // Preloader & Skeleton Handling
-window.addEventListener('load', () => {
+document.addEventListener('DOMContentLoaded', () => {
     // This runs when EVERYTHING (images, scripts) is loaded
     // We can use this as a fallback if skeleton loading is too fast
     // Mobile Menu logic moved to DOMContentLoaded for faster interaction
 
     // Journey Slider Logic
-    const sliderContainer = document.querySelector('.slider-container');
-    const sliderTrack = document.querySelector('.slider-track');
-    const originalSlides = document.querySelectorAll('.journey-card');
-    const prevBtn = document.querySelector('.prev-btn');
-    const nextBtn = document.querySelector('.next-btn');
-    const dotsContainer = document.querySelector('.slider-dots');
+    const journeySection = document.querySelector('#journey');
+    const sliderContainer = journeySection ? journeySection.querySelector('.slider-container') : null;
+    const sliderTrack = journeySection ? journeySection.querySelector('.slider-track') : null;
+    const originalSlides = journeySection ? journeySection.querySelectorAll('.journey-card') : [];
+    const prevBtn = journeySection ? journeySection.querySelector('.prev-btn') : null;
+    const nextBtn = journeySection ? journeySection.querySelector('.next-btn') : null;
+    const dotsContainer = journeySection ? journeySection.querySelector('.slider-dots') : null;
     
     if (sliderTrack && originalSlides.length > 0) {
         const slidesCount = originalSlides.length;
@@ -31,7 +32,7 @@ window.addEventListener('load', () => {
             sliderTrack.appendChild(clone);
         }
 
-        const allSlides = document.querySelectorAll('.journey-card'); // Includes clones
+        const allSlides = journeySection ? journeySection.querySelectorAll('.journey-card') : []; // Includes clones
         let currentIndex = cloneCount; // Start at first real slide
         let isTransitioning = false;
         let autoPlayInterval;
@@ -142,6 +143,7 @@ window.addEventListener('load', () => {
         // Auto Play
         const startAutoPlay = () => {
             stopAutoPlay();
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             autoPlayInterval = setInterval(nextSlide, 3000);
         };
 
@@ -168,7 +170,7 @@ window.addEventListener('load', () => {
             resetAutoPlay();
         });
 
-        if (sliderContainer) {
+        if (sliderContainer && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
             sliderContainer.addEventListener('mouseenter', stopAutoPlay);
             sliderContainer.addEventListener('mouseleave', startAutoPlay);
         }
@@ -236,7 +238,6 @@ window.addEventListener('load', () => {
             resizeTimeout = setTimeout(() => updateSlider(false), 120);
         }, { passive: true });
 
-        const journeySection = document.querySelector('#journey');
         if (journeySection && 'IntersectionObserver' in window) {
             const visibilityObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -562,6 +563,43 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const mvGrid = document.querySelector('#mission .mission-grid');
+    const mvDots = Array.from(document.querySelectorAll('#mission .mv-dot'));
+    if (mvGrid && mvDots.length > 0) {
+        const setActiveDot = (index) => {
+            mvDots.forEach((d, i) => {
+                if (i === index) d.classList.add('active');
+                else d.classList.remove('active');
+            });
+        };
+
+        const scrollToCard = (index) => {
+            const firstCard = mvGrid.querySelector('.mv-card');
+            if (!firstCard) return;
+            const gap = parseInt(window.getComputedStyle(mvGrid).gap) || 0;
+            const step = firstCard.offsetWidth + gap;
+            mvGrid.scrollTo({ left: index * step, behavior: 'smooth' });
+        };
+
+        mvDots.forEach((dot, index) => {
+            dot.addEventListener('click', () => scrollToCard(index));
+        });
+
+        let rafId = null;
+        mvGrid.addEventListener('scroll', () => {
+            if (mvGrid.scrollWidth <= mvGrid.clientWidth) return;
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(() => {
+                const firstCard = mvGrid.querySelector('.mv-card');
+                if (!firstCard) return;
+                const gap = parseInt(window.getComputedStyle(mvGrid).gap) || 0;
+                const step = firstCard.offsetWidth + gap;
+                const idx = Math.round(mvGrid.scrollLeft / step);
+                setActiveDot(Math.max(0, Math.min(mvDots.length - 1, idx)));
+            });
+        }, { passive: true });
+    }
 });
 
 window.addEventListener('load', () => {
@@ -592,6 +630,12 @@ window.addEventListener('load', () => {
         let currentIndex = cloneCount;
         let isTransitioning = false;
         const supportPointer = 'PointerEvent' in window;
+        const getTrackGap = () => {
+            const styles = window.getComputedStyle(tTrack);
+            const gap = parseInt(styles.gap);
+            return Number.isFinite(gap) ? gap : 0;
+        };
+        const getMobileStep = () => (tSlides[0] ? (tSlides[0].offsetWidth + getTrackGap()) : 0);
         tSlides.forEach((_, index) => {
             const hit = document.createElement('button');
             hit.classList.add('dot-hit');
@@ -606,7 +650,7 @@ window.addEventListener('load', () => {
                 if (typeof e.preventDefault === 'function') e.preventDefault();
                 
                 if (window.innerWidth < 768) {
-                    const cardWidth = tSlides[0].offsetWidth + 16; // 16px gap
+                    const cardWidth = getMobileStep();
                     // For mobile infinite loop, we target the clones offset
                     if (tWrapper) {
                         tWrapper.scrollTo({
@@ -635,7 +679,7 @@ window.addEventListener('load', () => {
             
             if (window.innerWidth < 768) {
                 const scrollLeft = tWrapper ? tWrapper.scrollLeft : 0;
-                const cardWidth = tSlides[0].offsetWidth + 16;
+                const cardWidth = getMobileStep();
                 // Calculate raw index from scroll position
                 let rawIndex = Math.round(scrollLeft / cardWidth);
                 
@@ -672,7 +716,7 @@ window.addEventListener('load', () => {
                     if (!isScrolling) {
                         window.requestAnimationFrame(() => {
                             const scrollLeft = tWrapper.scrollLeft;
-                            const cardWidth = tSlides[0].offsetWidth + 16;
+                            const cardWidth = getMobileStep();
                             
                             // Update dots
                             let rawIndex = Math.round(scrollLeft / cardWidth);
@@ -710,7 +754,7 @@ window.addEventListener('load', () => {
                     // Check for precise snap alignment after scroll ends
                     scrollTimeout = setTimeout(() => {
                         const scrollLeft = tWrapper.scrollLeft;
-                        const cardWidth = tSlides[0].offsetWidth + 16;
+                        const cardWidth = getMobileStep();
                         
                         // Infinite loop check logic for when scroll completely stops
                         if (scrollLeft < cardWidth * 0.5) {
@@ -731,7 +775,7 @@ window.addEventListener('load', () => {
             if (window.innerWidth < 768) {
                 // Wait for layout
                 requestAnimationFrame(() => {
-                    const cardWidth = tSlides[0].offsetWidth + 16;
+                    const cardWidth = getMobileStep();
                     tWrapper.scrollLeft = cloneCount * cardWidth;
                 });
             }
@@ -838,12 +882,20 @@ window.addEventListener('load', () => {
             }
         });
         if (tNext) tNext.addEventListener('click', () => {
-            nextSlide();
+            if (window.innerWidth < 768 && tWrapper) {
+                tWrapper.scrollBy({ left: getMobileStep(), behavior: 'smooth' });
+            } else {
+                nextSlide();
+            }
             tStopAutoPlay();
             tStartAutoPlay();
         });
         if (tPrev) tPrev.addEventListener('click', () => {
-            prevSlide();
+            if (window.innerWidth < 768 && tWrapper) {
+                tWrapper.scrollBy({ left: -getMobileStep(), behavior: 'smooth' });
+            } else {
+                prevSlide();
+            }
             tStopAutoPlay();
             tStartAutoPlay();
         });
@@ -855,7 +907,7 @@ window.addEventListener('load', () => {
             dragging = true;
             startX = x;
             startScroll = tWrapper ? tWrapper.scrollLeft : 0;
-            if (!isMobile) tTrack.style.transition = 'none';
+            if (window.innerWidth >= 768) tTrack.style.transition = 'none';
         };
         let rafPending = false;
         let lastX = 0;
@@ -864,7 +916,7 @@ window.addEventListener('load', () => {
             if (!dragging) return;
             lastX = x;
             dragDelta = lastX - startX;
-            if (isMobile && tWrapper) {
+            if (window.innerWidth < 768 && tWrapper) {
                 tWrapper.scrollLeft = startScroll - dragDelta;
                 return;
             }
@@ -895,19 +947,19 @@ window.addEventListener('load', () => {
             const totalItemWidth = dragStep || getSlideWidth();
             const threshold = Math.max(50, totalItemWidth * 0.15);
             if (dragDelta > threshold) {
-                if (isMobile && tWrapper) {
+                if (window.innerWidth < 768 && tWrapper) {
                     tWrapper.scrollBy({ left: -totalItemWidth, behavior: 'smooth' });
                 } else {
                     prevSlide();
                 }
             } else if (dragDelta < -threshold) {
-                if (isMobile && tWrapper) {
+                if (window.innerWidth < 768 && tWrapper) {
                     tWrapper.scrollBy({ left: totalItemWidth, behavior: 'smooth' });
                 } else {
                     nextSlide();
                 }
             } else {
-                if (!isMobile) updateSlider(true);
+                if (window.innerWidth >= 768) updateSlider(true);
                 // on mobile, let scroll-snap settle naturally
             }
             dragDelta = 0;

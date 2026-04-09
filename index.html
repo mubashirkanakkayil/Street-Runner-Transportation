@@ -93,7 +93,7 @@
         </div>
 
         <div class="hero-bg-wrapper skeleton skeleton-image">
-            <img src="https://images.unsplash.com/photo-1519003722824-194d4455a60c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="Truck on Highway" class="hero-img" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1519003722824-194d4455a60c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="Truck on Highway" class="hero-img" loading="eager" fetchpriority="high" decoding="async">
             <div class="hero-overlay"></div>
             
             <div class="hero-content">
@@ -243,6 +243,10 @@
                     <h3>Our Vision</h3>
                     <p>Our vision is to be a driving force that equips clients with the essential tools and <span class="no-hyphen">services</span> needed for successful projects. Committed to safety, <span class="no-hyphen">professionalism</span>, and customer satisfaction, we also prioritize environmental sustainability and the well-being of our community.</p>
                 </div>
+            </div>
+            <div class="mv-carousel-controls">
+                <button class="mv-dot active" type="button" aria-label="View Mission" data-index="0"></button>
+                <button class="mv-dot" type="button" aria-label="View Vision" data-index="1"></button>
             </div>
         </div>
     </section>
